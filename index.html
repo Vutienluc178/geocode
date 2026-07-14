@@ -87,6 +87,12 @@
   }
   .panel-btns { display: flex; gap: 6px; flex-wrap: wrap; }
   .panel-btns button { padding: 5px 10px; font-size: 11.5px; }
+  .png-scale-label { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+  .png-scale-label select {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 6px; font-size: 11.5px;
+  }
+  #pngPreview img { max-width: 100%; max-height: 160px; }
   .preview-render {
     background: #fff; border-radius: 8px; min-height: 90px; max-height: 170px;
     display: flex; align-items: center; justify-content: center; overflow: auto; padding: 6px;
@@ -122,6 +128,15 @@
     <button class="btn-secondary" id="insertTemplateBtn">Chèn hình mẫu →</button>
   </div>
 
+  <div class="template-row">
+    <label class="auto-update-toggle">
+      <input type="checkbox" id="axesToggle" checked>
+      Hiện trục toạ độ Oxy
+    </label>
+    <button class="btn-secondary" id="viewSquare10Btn">Vùng nhìn −10 → 10</button>
+    <button class="btn-secondary" id="viewSquare5Btn">Vùng nhìn −5 → 5</button>
+  </div>
+
   <div id="ggb-container"></div>
 
   <div class="btn-row">
@@ -135,7 +150,7 @@
   <div class="status" id="status"></div>
 
   <details class="code-section" open id="codeSection">
-    <summary>Code & xem trước (TikZ · CeTZ · SVG) — bấm để thu gọn/mở rộng</summary>
+    <summary>Code & xem trước (TikZ · CeTZ · PNG) — bấm để thu gọn/mở rộng</summary>
     <div class="grid">
       <div class="panel">
         <h2>Code TikZ</h2>
@@ -161,20 +176,30 @@
         <div class="preview-render" id="cetzPreview"><span class="ph">Bấm "Sinh code" để xem trước</span></div>
       </div>
       <div class="panel">
-        <h2>Code SVG (nền trong suốt)</h2>
-        <textarea id="svgOut" readonly placeholder="Bấm 'Sinh code' để xuất..."></textarea>
-        <div class="panel-btns">
-          <button class="btn-secondary" data-copy="svgOut">Sao chép</button>
-          <button class="btn-secondary" data-download="svgOut" data-ext="svg">Tải .svg</button>
-          <button class="btn-secondary" id="openSvgomgBtn">Mở SVGOMG</button>
+        <h2>Ảnh PNG (nền trong suốt, xuất trực tiếp từ GeoGebra)</h2>
+        <div class="preview-render checker" id="pngPreview" style="min-height:140px;">
+          <span class="ph">Bấm "Sinh code" hoặc "Xuất PNG" để xuất...</span>
         </div>
-        <h2>Xem trước (nền caro = trong suốt)</h2>
-        <div class="preview-render checker" id="svgPreview"><span class="ph">Bấm "Sinh code" để xem trước</span></div>
+        <div class="panel-btns">
+          <label class="png-scale-label">Độ nét:
+            <select id="pngScaleSelect">
+              <option value="1">1x</option>
+              <option value="2" selected>2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x (rất nét)</option>
+            </select>
+          </label>
+        </div>
+        <div class="panel-btns">
+          <button class="btn-secondary" id="exportPngBtn">Xuất PNG</button>
+          <button class="btn-secondary" id="downloadPngBtn">Tải .png</button>
+          <button class="btn-secondary" id="copyPngBtn">Sao chép ảnh</button>
+        </div>
       </div>
     </div>
   </details>
 
-  <div class="footer-note">Applet GeoGebra tải từ geogebra.org, preview TikZ dùng TikZJax (tikzjax.com), preview CeTZ dùng typst.ts (jsdelivr) — cả 3 đều cần kết nối mạng và tự tải WASM lần đầu (có thể mất vài giây). Việc sinh code chạy hoàn toàn trong trình duyệt, không gửi hình vẽ đi máy chủ nào khác. Nút "Mở trong Prism" chỉ copy code + mở tab mới do Prism chưa có API công khai để tự động chèn nội dung — Thầy cần dán thủ công vào main.tex.</div>
+  <div class="footer-note">Applet GeoGebra tải từ geogebra.org, preview TikZ dùng TikZJax (tikzjax.com), preview CeTZ dùng typst.ts (jsdelivr) — cả 3 đều cần kết nối mạng và tự tải WASM lần đầu (có thể mất vài giây). Ảnh PNG xuất trực tiếp từ chính GeoGebra (không qua bước dựng lại) nên luôn khớp chính xác hình đang vẽ. Việc sinh code chạy hoàn toàn trong trình duyệt, không gửi hình vẽ đi máy chủ nào khác. Nút "Mở trong Prism" chỉ copy code + mở tab mới do Prism chưa có API công khai để tự động chèn nội dung — Thầy cần dán thủ công vào main.tex.</div>
 </div>
 
 <script src="https://www.geogebra.org/apps/deployggb.js"></script>
@@ -656,87 +681,6 @@ function generateTikZ(model) {
   ].join('\n');
 }
 
-// ===================== Model -> SVG (nền trong suốt) =====================
-// Dịch nhãn ra khỏi điểm theo đúng hướng neo (anchor) mà GeoGebra dùng — tránh nhãn đè lên chấm điểm.
-function svgAnchorOffset(anchor) {
-  const a = (anchor || '').trim();
-  const OFF = 13; // khoảng cách (px) từ điểm ra nhãn
-  const map = {
-    'below left': { dx: -OFF, dy: OFF + 3, textAnchor: 'end', baseline: 'hanging' },
-    'below right': { dx: OFF, dy: OFF + 3, textAnchor: 'start', baseline: 'hanging' },
-    'above left': { dx: -OFF, dy: -OFF, textAnchor: 'end', baseline: 'alphabetic' },
-    'above right': { dx: OFF, dy: -OFF, textAnchor: 'start', baseline: 'alphabetic' },
-    below: { dx: 0, dy: OFF + 5, textAnchor: 'middle', baseline: 'hanging' },
-    above: { dx: 0, dy: -OFF, textAnchor: 'middle', baseline: 'alphabetic' },
-    left: { dx: -OFF - 3, dy: 0, textAnchor: 'end', baseline: 'middle' },
-    right: { dx: OFF + 3, dy: 0, textAnchor: 'start', baseline: 'middle' },
-    center: { dx: 0, dy: 0, textAnchor: 'middle', baseline: 'middle' },
-  };
-  return map[a] || map.below;
-}
-
-function generateSVG(model) {
-  const pad = 0.6;
-  const { xmin, xmax, ymin, ymax } = model.bbox;
-  const w = Math.max(xmax - xmin, 0.1) + pad * 2;
-  const h = Math.max(ymax - ymin, 0.1) + pad * 2;
-  const scale = 60;
-  const svgW = +(w * scale).toFixed(1);
-  const svgH = +(h * scale).toFixed(1);
-  const X = (x) => (x - xmin + pad) * scale;
-  const Y = (y) => svgH - (y - ymin + pad) * scale;
-
-  const defsSet = [];
-  const parts = [];
-  model.elements.forEach((el) => {
-    const style = el.style || {};
-    const strokeColor = rgbToHex(style.stroke || [0, 0, 0]);
-    let dash = null;
-    if (style.dash === 'dashed') dash = '7,4';
-    else if (style.dash === 'dotted') dash = '2,3';
-    else if (style.dash === 'dashdot') dash = '7,3,1.5,3';
-    const strokeWidth = widthPt(style) * 1.4;
-    const dashAttr = dash ? ` stroke-dasharray="${dash}"` : '';
-
-    if (el.type === 'circle') {
-      const fillColor = style.fill ? rgbToHex(style.fill) : 'none';
-      const fillOpacityAttr = style.fill && style.fillAlpha != null ? ` fill-opacity="${style.fillAlpha.toFixed(2)}"` : '';
-      parts.push(`<circle cx="${X(el.center[0]).toFixed(2)}" cy="${Y(el.center[1]).toFixed(2)}" r="${(el.radius * scale).toFixed(2)}" fill="${fillColor}"${fillOpacityAttr} stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashAttr}/>`);
-    } else if (el.type === 'arc') {
-      const sx = X(el.center[0] + el.radius * Math.cos((el.startDeg * Math.PI) / 180));
-      const sy = Y(el.center[1] + el.radius * Math.sin((el.startDeg * Math.PI) / 180));
-      const ex = X(el.center[0] + el.radius * Math.cos((el.endDeg * Math.PI) / 180));
-      const ey = Y(el.center[1] + el.radius * Math.sin((el.endDeg * Math.PI) / 180));
-      const largeArc = el.endDeg - el.startDeg > 180 ? 1 : 0;
-      parts.push(`<path d="M ${sx.toFixed(2)} ${sy.toFixed(2)} A ${(el.radius * scale).toFixed(2)} ${(el.radius * scale).toFixed(2)} 0 ${largeArc} 0 ${ex.toFixed(2)} ${ey.toFixed(2)}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashAttr}/>`);
-    } else if (el.type === 'vector') {
-      const [p1, p2] = el.points;
-      const markId = `arrow_${defsSet.length}`;
-      defsSet.push(`<marker id="${markId}" markerWidth="8" markerHeight="8" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${strokeColor}"/></marker>`);
-      parts.push(`<line x1="${X(p1[0]).toFixed(2)}" y1="${Y(p1[1]).toFixed(2)}" x2="${X(p2[0]).toFixed(2)}" y2="${Y(p2[1]).toFixed(2)}" stroke="${strokeColor}" stroke-width="${strokeWidth}" marker-end="url(#${markId})"/>`);
-    } else if (el.type === 'path') {
-      const pts = el.points.map(([x, y]) => `${X(x).toFixed(2)},${Y(y).toFixed(2)}`).join(' ');
-      const fillColor = style.fill ? rgbToHex(style.fill) : 'none';
-      const fillOpacityAttr = style.fill && style.fillAlpha != null ? ` fill-opacity="${style.fillAlpha.toFixed(2)}"` : '';
-      const tag = el.closed ? 'polygon' : 'polyline';
-      parts.push(`<${tag} points="${pts}" fill="${fillColor}"${fillOpacityAttr} stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashAttr}/>`);
-    } else if (el.type === 'pointmark') {
-      parts.push(`<circle cx="${X(el.pos[0]).toFixed(2)}" cy="${Y(el.pos[1]).toFixed(2)}" r="3.5" fill="${strokeColor}" stroke="none"/>`);
-    } else if (el.type === 'anglelabel') {
-      parts.push(`<text x="${X(el.pos[0]).toFixed(2)}" y="${Y(el.pos[1]).toFixed(2)}" font-size="13" fill="${strokeColor}" text-anchor="middle" dominant-baseline="middle">${el.deg}°</text>`);
-    } else if (el.type === 'node') {
-      const safe = (el.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const { dx, dy, textAnchor, baseline } = svgAnchorOffset(el.anchor);
-      const tx = X(el.pos[0]) + dx;
-      const ty = Y(el.pos[1]) + dy;
-      parts.push(`<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="14" fill="${strokeColor}" text-anchor="${textAnchor}" dominant-baseline="${baseline}">${safe}</text>`);
-    }
-  });
-
-  const defsBlock = defsSet.length ? `<defs>${defsSet.join('')}</defs>` : '';
-  // Không vẽ rect nền => nền trong suốt, có thể chèn trực tiếp vào Word/PowerPoint/website nền màu bất kỳ.
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}">\n  ${defsBlock}\n  ${parts.join('\n  ')}\n</svg>`;
-}
 const statusEl = document.getElementById('status');
 function setStatus(msg, type) {
   statusEl.textContent = msg;
@@ -881,6 +825,28 @@ document.getElementById('insertTemplateBtn').addEventListener('click', () => {
   }
 });
 
+document.getElementById('axesToggle').addEventListener('change', (e) => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  try {
+    ggbApi.setAxesVisible(e.target.checked, e.target.checked);
+    setStatus(e.target.checked ? 'Đã hiện trục toạ độ Oxy.' : 'Đã ẩn trục toạ độ Oxy.', 'ok');
+  } catch (err) {
+    setStatus('Lỗi khi bật/tắt trục: ' + err.message, 'err');
+  }
+});
+
+function setSquareView(bound) {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  try {
+    ggbApi.setCoordSystem(-bound, bound, -bound, bound);
+    setStatus(`Đã đặt vùng nhìn hình vuông toạ độ từ −${bound} đến ${bound}.`, 'ok');
+  } catch (err) {
+    setStatus('Lỗi khi đặt vùng nhìn: ' + err.message, 'err');
+  }
+}
+document.getElementById('viewSquare10Btn').addEventListener('click', () => setSquareView(10));
+document.getElementById('viewSquare5Btn').addEventListener('click', () => setSquareView(5));
+
 
 document.getElementById('typstLoader').addEventListener('load', () => {
   try {
@@ -934,7 +900,7 @@ const ggb = new GGBApplet({
   height: 680,
   showToolBar: true,
   showMenuBar: false,
-  showAlgebraInput: false,
+  showAlgebraInput: true,
   showResetIcon: true,
   allowStyleBar: true,
   language: 'vi',
@@ -993,7 +959,6 @@ function regenerateCode(opts = {}) {
     }
     document.getElementById('tikzOut').value = generateTikZ(model);
     document.getElementById('cetzOut').value = generateCetz(model);
-    document.getElementById('svgOut').value = generateSVG(model);
     const projNote = model.is3D ? ' (đã áp dụng phép chiếu song song 3D→2D: trục sâu chéo 45°, tỉ lệ 1/2)' : '';
     const autoNote = silent ? ' (tự động cập nhật theo vị trí điểm)' : '';
     if (model.skippedNames && model.skippedNames.length > 0) {
@@ -1001,8 +966,6 @@ function regenerateCode(opts = {}) {
     } else {
       setStatus(`Đã sinh code từ ${model.elements.length} đối tượng${projNote}${autoNote}.`, 'ok');
     }
-    // SVG render lại tức thì (rẻ, không cần biên dịch)
-    document.getElementById('svgPreview').innerHTML = document.getElementById('svgOut').value;
     // TikZJax/typst.ts biên dịch nặng hơn — bỏ qua khi đang tự động cập nhật liên tục lúc kéo điểm
     if (!skipHeavyPreview) {
       renderTikzPreview(document.getElementById('tikzOut').value);
@@ -1013,8 +976,52 @@ function regenerateCode(opts = {}) {
   }
 }
 
+// ===================== Xuất ảnh PNG trong suốt (trực tiếp từ GeoGebra API) =====================
+let lastPngBase64 = null;
+
+function exportPngFromGeoGebra(silent = false) {
+  if (!ggbApi) { if (!silent) setStatus('GeoGebra chưa tải xong, đợi một chút rồi thử lại.', 'err'); return; }
+  const scale = parseFloat(document.getElementById('pngScaleSelect').value) || 2;
+  try {
+    // getPNGBase64(exportScale, transparent, DPI) — DPI để undefined vì có DPI sẽ chậm hơn nhiều (theo tài liệu GeoGebra)
+    const base64 = ggbApi.getPNGBase64(scale, true, undefined);
+    if (!base64) { if (!silent) setStatus('Không xuất được PNG — chưa có gì để vẽ.', 'err'); return; }
+    lastPngBase64 = base64;
+    const box = document.getElementById('pngPreview');
+    box.innerHTML = `<img src="data:image/png;base64,${base64}" alt="Hình xuất từ GeoGebra">`;
+    if (!silent) setStatus('Đã xuất ảnh PNG nền trong suốt từ GeoGebra.', 'ok');
+  } catch (e) {
+    if (!silent) setStatus('Lỗi khi xuất PNG: ' + e.message, 'err');
+  }
+}
+
+document.getElementById('exportPngBtn').addEventListener('click', () => exportPngFromGeoGebra(false));
+
+document.getElementById('downloadPngBtn').addEventListener('click', () => {
+  if (!lastPngBase64) { setStatus('Chưa có ảnh PNG — bấm "Xuất PNG" trước.', 'err'); return; }
+  const a = document.createElement('a');
+  a.href = 'data:image/png;base64,' + lastPngBase64;
+  a.download = 'hinh-ve.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+});
+
+document.getElementById('copyPngBtn').addEventListener('click', async () => {
+  if (!lastPngBase64) { setStatus('Chưa có ảnh PNG — bấm "Xuất PNG" trước.', 'err'); return; }
+  try {
+    const res = await fetch('data:image/png;base64,' + lastPngBase64);
+    const blob = await res.blob();
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    setStatus('Đã sao chép ảnh PNG vào clipboard — dán thẳng vào Word/PowerPoint.', 'ok');
+  } catch (e) {
+    setStatus('Trình duyệt không hỗ trợ sao chép ảnh trực tiếp — dùng nút "Tải .png" thay thế.', 'err');
+  }
+});
+
 document.getElementById('generateBtn').addEventListener('click', () => {
   regenerateCode({ silent: false, skipHeavyPreview: false });
+  exportPngFromGeoGebra(true);
 });
 
 document.getElementById('autoUpdateToggle').addEventListener('change', (e) => {
@@ -1089,17 +1096,6 @@ document.getElementById('openTypstAppBtn').addEventListener('click', () => {
     setStatus('Không sao chép được tự động — mở Typst App và dán code CeTZ thủ công.', 'err');
   });
   window.open('https://typst.app/', '_blank');
-});
-
-document.getElementById('openSvgomgBtn').addEventListener('click', () => {
-  const svgCode = document.getElementById('svgOut').value;
-  if (!svgCode) { setStatus('Chưa có code SVG — bấm "Sinh code" trước.', 'err'); return; }
-  navigator.clipboard.writeText(svgCode).then(() => {
-    setStatus('Đã sao chép code SVG — đang mở SVGOMG, dán vào (kéo-thả hoặc Ctrl+V) để xem/tối ưu/tải ảnh.', 'ok');
-  }).catch(() => {
-    setStatus('Không sao chép được tự động — mở SVGOMG và dán code SVG thủ công.', 'err');
-  });
-  window.open('https://jakearchibald.github.io/svgomg/', '_blank');
 });
 
 document.querySelectorAll('[data-copy]').forEach((btn) => {
