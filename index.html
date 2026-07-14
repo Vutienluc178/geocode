@@ -20,6 +20,47 @@
     padding: 20px;
   }
   .wrap { max-width: 1300px; margin: 0 auto; }
+
+  .author-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(120deg, #1a2450, #202a5c 40%, #1a3a4a);
+    border: 1px solid #3a4a8a;
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 18px rgba(110, 231, 183, 0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .author-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+    opacity: 0.06;
+  }
+  .author-badge {
+    flex-shrink: 0;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0a0c16;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; letter-spacing: 0.5px;
+    box-shadow: 0 0 0 3px rgba(110,231,183,0.15), 0 4px 12px rgba(0,0,0,0.3);
+    position: relative; z-index: 1;
+  }
+  .author-info { position: relative; z-index: 1; }
+  .author-name {
+    font-size: 17px; font-weight: 700; color: #fff;
+    letter-spacing: 0.2px;
+  }
+  .author-meta {
+    font-size: 12.5px; color: var(--accent2); margin-top: 2px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
+    white-space: nowrap; overflow-x: auto;
+  }
+  .author-dot { color: var(--muted); flex-shrink: 0; }
+
   h1 {
     font-size: 21px; margin: 0 0 4px;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
@@ -37,6 +78,13 @@
   .guide code { background: #0006; padding: 1px 6px; border-radius: 4px; color: var(--accent2); }
 
   #ggb-container { width: 100%; height: 680px; background: #fff; border-radius: 12px; overflow: hidden; }
+
+  .ggb-wrapper { position: relative; }
+  .fullscreen-btn-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .ggb-wrapper:fullscreen { background: #000; display: flex; align-items: center; justify-content: center; }
+  .ggb-wrapper:fullscreen #ggb-container { height: 100vh !important; width: 100vw !important; border-radius: 0; }
+  .ggb-wrapper:-webkit-full-screen { background: #000; }
+  .ggb-wrapper:-webkit-full-screen #ggb-container { height: 100vh !important; width: 100vw !important; border-radius: 0; }
 
   .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; align-items: center; }
   .auto-update-toggle {
@@ -150,6 +198,18 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="author-banner">
+    <div class="author-badge">VTL</div>
+    <div class="author-info">
+      <div class="author-name">Tác giả: Thầy Vũ Tiến Lực</div>
+      <div class="author-meta">
+        <span>Trường THPT Nguyễn Hữu Cảnh - TP Hồ Chí Minh</span>
+        <span class="author-dot">•</span>
+        <span>📞 0969068849</span>
+      </div>
+    </div>
+  </div>
+
   <h1>GeoGebra trực tiếp → TikZ / CeTZ</h1>
   <div class="subtitle">Vẽ hình trực tiếp trong GeoGebra bên dưới, bấm "Sinh code" để lấy ngay code TikZ và CeTZ (Typst) — không cần bước xuất/dán thủ công.</div>
 
@@ -211,7 +271,61 @@
     </div>
   </details>
 
-  <div id="ggb-container"></div>
+  <details class="region-tools">
+    <summary>Công cụ sơ đồ Ven (tập hợp) — bấm để mở</summary>
+
+    <div class="region-tool-box">
+      <h3>1. Vẽ khung sơ đồ Ven</h3>
+      <div class="region-row">
+        <label>Số tập hợp:
+          <select id="vennNumSets" class="region-input-small" style="width:56px;">
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </label>
+        <button class="btn-secondary" id="drawVennBtn">Vẽ sơ đồ →</button>
+      </div>
+    </div>
+
+    <div class="region-tool-box">
+      <h3>2. Bài toán đếm số phần tử (nguyên lý bù trừ)</h3>
+      <div class="region-row">
+        <label>|A|: <input type="number" id="vennCountA" class="region-input-small" step="1"></label>
+        <label>|B|: <input type="number" id="vennCountB" class="region-input-small" step="1"></label>
+        <label id="vennCountCWrap">|C|: <input type="number" id="vennCountC" class="region-input-small" step="1"></label>
+      </div>
+      <div class="region-row">
+        <label>|A∩B|: <input type="number" id="vennCountAB" class="region-input-small" step="1"></label>
+        <label id="vennCountACWrap">|A∩C|: <input type="number" id="vennCountAC" class="region-input-small" step="1"></label>
+        <label id="vennCountBCWrap">|B∩C|: <input type="number" id="vennCountBC" class="region-input-small" step="1"></label>
+      </div>
+      <div class="region-row">
+        <label id="vennCountABCWrap">|A∩B∩C|: <input type="number" id="vennCountABC" class="region-input-small" step="1"></label>
+        <label>|U| (tuỳ chọn): <input type="number" id="vennCountU" class="region-input-small" step="1"></label>
+        <button class="btn-secondary" id="vennCalcBtn">Tính & điền số →</button>
+      </div>
+    </div>
+
+    <div class="region-tool-box">
+      <h3>3. Tô màu theo phép toán tập hợp (chỉ hỗ trợ 2 tập hợp)</h3>
+      <div class="region-row">
+        <select id="vennOpSelect" class="region-input">
+          <option value="union">A ∪ B (hợp)</option>
+          <option value="intersect">A ∩ B (giao)</option>
+          <option value="aMinusB">A \ B (hiệu)</option>
+          <option value="bMinusA">B \ A (hiệu)</option>
+        </select>
+        <button class="btn-secondary" id="vennShadeBtn">Tô màu →</button>
+      </div>
+    </div>
+  </details>
+
+  <div class="ggb-wrapper">
+    <div id="ggb-container"></div>
+  </div>
+  <div class="fullscreen-btn-row">
+    <button class="btn-secondary" id="fullscreenBtn" title="Toàn màn hình">⛶ Toàn màn hình</button>
+  </div>
 
   <div class="btn-row">
     <button class="btn-primary" id="generateBtn">Sinh code →</button>
@@ -856,6 +970,94 @@ function lineBoxSegment(A, B, K, bound) {
   return [pts[0], pts[1]];
 }
 
+// ===================== Công cụ sơ đồ Ven (tập hợp) =====================
+// Bố trí sơ đồ Ven chuẩn — toạ độ cố định, đủ chồng lấn để tạo các miền kinh điển.
+const VENN2 = {
+  A: { center: [-1.2, 0], radius: 2.2 },
+  B: { center: [1.2, 0], radius: 2.2 },
+  labelA: [-3.0, 2.0], labelB: [3.0, 2.0],
+};
+const VENN3 = {
+  A: { center: [-1.4, 1.0], radius: 2.6 },
+  B: { center: [1.4, 1.0], radius: 2.6 },
+  C: { center: [0, -1.4], radius: 2.6 },
+  labelA: [-3.4, 2.6], labelB: [3.4, 2.6], labelC: [0, -3.6],
+  // Vị trí gần đúng để đặt số lượng phần tử vào từng miền (theo bố trí trên)
+  posOnlyA: [-2.3, 1.6], posOnlyB: [2.3, 1.6], posOnlyC: [0, -2.4],
+  posAB: [0, 1.9], posAC: [-1.3, -0.6], posBC: [1.3, -0.6], posABC: [0, 0.4],
+};
+
+function circleIntersectionPoints(c1, r1, c2, r2) {
+  const dx = c2[0] - c1[0], dy = c2[1] - c1[1];
+  const d = Math.hypot(dx, dy);
+  if (d > r1 + r2 || d < Math.abs(r1 - r2) || d === 0) return null;
+  const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+  const h = Math.sqrt(Math.max(0, r1 * r1 - a * a));
+  const xm = c1[0] + (a * dx) / d, ym = c1[1] + (a * dy) / d;
+  return [[xm + (h * dy) / d, ym - (h * dx) / d], [xm - (h * dy) / d, ym + (h * dx) / d]];
+}
+
+function arcBetween(center, radius, pStart, pEnd, steps) {
+  let a1 = Math.atan2(pStart[1] - center[1], pStart[0] - center[0]);
+  let a2 = Math.atan2(pEnd[1] - center[1], pEnd[0] - center[0]);
+  if (a2 < a1) a2 += 2 * Math.PI;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = a1 + ((a2 - a1) * i) / steps;
+    pts.push([center[0] + radius * Math.cos(t), center[1] + radius * Math.sin(t)]);
+  }
+  return pts;
+}
+function insideCircleXY(p, c, r) { return Math.hypot(p[0] - c[0], p[1] - c[1]) < r; }
+function ptEq(p1, p2, eps = 1e-6) { return Math.abs(p1[0] - p2[0]) < eps && Math.abs(p1[1] - p2[1]) < eps; }
+
+// Dựng chính xác đa giác xấp xỉ (bằng cung tròn lấy mẫu) cho A∪B, A∩B, A\B, B\A của 2 đường tròn.
+// Đã kiểm chứng bằng số liệu cụ thể (tâm miền giao đúng ở giữa, tâm A\B lệch đúng về phía A).
+function buildTwoCircleRegion(setA, setB, op) {
+  const cA = setA.center, rA = setA.radius, cB = setB.center, rB = setB.radius;
+  const inter = circleIntersectionPoints(cA, rA, cB, rB);
+  const steps = 50;
+  if (!inter) {
+    // Không giao nhau: xử lý các trường hợp suy biến đơn giản
+    const aInB = insideCircleXY(cA, cB, rB) && rA <= rB;
+    const bInA = insideCircleXY(cB, cA, rA) && rB <= rA;
+    if (op === 'intersect') return aInB ? arcBetween(cA, rA, [cA[0] + rA, cA[1]], [cA[0] + rA, cA[1]], steps) : (bInA ? arcBetween(cB, rB, [cB[0] + rB, cB[1]], [cB[0] + rB, cB[1]], steps) : []);
+    if (op === 'aMinusB') return aInB ? [] : arcBetween(cA, rA, [cA[0] + rA, cA[1]], [cA[0] + rA, cA[1]], steps);
+    if (op === 'bMinusA') return bInA ? [] : arcBetween(cB, rB, [cB[0] + rB, cB[1]], [cB[0] + rB, cB[1]], steps);
+    return null; // union: dùng cách tô 2 hình tròn riêng, không cần đa giác hợp
+  }
+  const [P1, P2] = inter;
+  const arcA1 = arcBetween(cA, rA, P1, P2, steps), arcA2 = arcBetween(cA, rA, P2, P1, steps);
+  const arcB1 = arcBetween(cB, rB, P1, P2, steps), arcB2 = arcBetween(cB, rB, P2, P1, steps);
+  const mid = (a) => a[Math.floor(a.length / 2)];
+
+  if (op === 'intersect') {
+    const aArc = insideCircleXY(mid(arcA1), cB, rB) ? arcA1 : arcA2;
+    let bArc = insideCircleXY(mid(arcB1), cA, rA) ? arcB1 : arcB2;
+    if (!ptEq(bArc[0], aArc[aArc.length - 1])) bArc = [...bArc].reverse();
+    return [...aArc, ...bArc.slice(1)];
+  }
+  if (op === 'aMinusB') {
+    const aArc = insideCircleXY(mid(arcA1), cB, rB) ? arcA2 : arcA1; // cung A ở NGOÀI B
+    let bArc = insideCircleXY(mid(arcB1), cA, rA) ? arcB1 : arcB2; // cung B ở TRONG A (vết khuyết)
+    if (!ptEq(bArc[0], aArc[aArc.length - 1])) bArc = [...bArc].reverse();
+    return [...aArc, ...bArc.slice(1)];
+  }
+  if (op === 'bMinusA') {
+    const bArc = insideCircleXY(mid(arcB1), cA, rA) ? arcB2 : arcB1;
+    let aArc = insideCircleXY(mid(arcA1), cB, rB) ? arcA1 : arcA2;
+    if (!ptEq(aArc[0], bArc[bArc.length - 1])) aArc = [...aArc].reverse();
+    return [...bArc, ...aArc.slice(1)];
+  }
+  if (op === 'union') {
+    const aArc = insideCircleXY(mid(arcA1), cB, rB) ? arcA2 : arcA1; // cung A ngoài B
+    let bArc = insideCircleXY(mid(arcB1), cA, rA) ? arcB2 : arcB1; // cung B ngoài A
+    if (!ptEq(bArc[0], aArc[aArc.length - 1])) bArc = [...bArc].reverse();
+    return [...aArc, ...bArc.slice(1)];
+  }
+  return null;
+}
+
 const statusEl = document.getElementById('status');
 function setStatus(msg, type) {
   statusEl.textContent = msg;
@@ -1138,6 +1340,119 @@ document.getElementById('drawInequalitySystemBtn').addEventListener('click', () 
   }
 });
 
+// ---- Sơ đồ Ven ----
+function updateVennFieldsVisibility() {
+  const n = document.getElementById('vennNumSets').value;
+  const show3 = n === '3';
+  ['vennCountCWrap', 'vennCountACWrap', 'vennCountBCWrap', 'vennCountABCWrap'].forEach((id) => {
+    document.getElementById(id).style.display = show3 ? '' : 'none';
+  });
+}
+document.getElementById('vennNumSets').addEventListener('change', updateVennFieldsVisibility);
+updateVennFieldsVisibility();
+
+document.getElementById('drawVennBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const n = document.getElementById('vennNumSets').value;
+  try { ggbApi.newConstruction(); } catch (e) {}
+  const layout = n === '3' ? VENN3 : VENN2;
+  const sets = n === '3' ? ['A', 'B', 'C'] : ['A', 'B'];
+  sets.forEach((s) => {
+    const { center, radius } = layout[s];
+    ggbApi.evalCommand(`venn${s}=Circle((${center[0]},${center[1]}),${radius})`);
+    customRegions.push({ type: 'circle', center, radius, style: { stroke: [0.15, 0.15, 0.15], fill: null, fillAlpha: null, width: null, dash: null } });
+  });
+  sets.forEach((s) => {
+    const pos = layout['label' + s];
+    ggbApi.evalCommand(`Text("${s}",(${pos[0]},${pos[1]}))`);
+    customRegions.push({ type: 'node', pos, anchor: 'center', text: s, style: { stroke: [0, 0, 0] } });
+  });
+  try { ggbApi.showAllObjects(); } catch (e) {}
+  setStatus(`Đã vẽ sơ đồ Ven ${n} tập hợp. Bấm "Sinh code" để xuất, hoặc dùng mục 2/3 bên dưới để điền số/tô màu.`, 'ok');
+});
+
+document.getElementById('vennCalcBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const n = document.getElementById('vennNumSets').value;
+  const num = (id) => { const v = parseFloat(document.getElementById(id).value); return isFinite(v) ? v : null; };
+  const A = num('vennCountA'), B = num('vennCountB'), AB = num('vennCountAB'), U = num('vennCountU');
+
+  const placeText = (value, pos) => {
+    ggbApi.evalCommand(`Text("${value}",(${pos[0]},${pos[1]}))`);
+    customRegions.push({ type: 'node', pos, anchor: 'center', text: String(value), style: { stroke: [0, 0, 0] } });
+  };
+
+  if (n === '2') {
+    if (A == null || B == null || AB == null) { setStatus('Cần nhập đủ |A|, |B|, |A∩B|.', 'err'); return; }
+    const onlyA = A - AB, onlyB = B - AB;
+    if (onlyA < 0 || onlyB < 0 || AB < 0) { setStatus('Số liệu không hợp lệ (số phần tử âm) — kiểm tra lại.', 'err'); return; }
+    placeText(onlyA, [VENN2.A.center[0] - 0.9, VENN2.A.center[1]]);
+    placeText(AB, [0, 0]);
+    placeText(onlyB, [VENN2.B.center[0] + 0.9, VENN2.B.center[1]]);
+    let note = '';
+    if (U != null) {
+      const outside = U - (A + B - AB);
+      if (outside < 0) { setStatus('Với |U| đã cho, số phần tử ngoài A∪B bị âm — kiểm tra lại số liệu.', 'err'); return; }
+      placeText(outside, [-4.3, -2.6]);
+      note = `, ngoài A∪B = ${outside}`;
+    }
+    setStatus(`Đã tính: chỉ A = ${onlyA}, chỉ B = ${onlyB}, A∩B = ${AB}${note}.`, 'ok');
+  } else {
+    const C = num('vennCountC'), AC = num('vennCountAC'), BC = num('vennCountBC'), ABC = num('vennCountABC');
+    if ([A, B, C, AB, AC, BC, ABC].some((v) => v == null)) {
+      setStatus('Cần nhập đủ |A|, |B|, |C|, |A∩B|, |A∩C|, |B∩C|, |A∩B∩C|.', 'err'); return;
+    }
+    const onlyA = A - AB - AC + ABC, onlyB = B - AB - BC + ABC, onlyC = C - AC - BC + ABC;
+    const abOnly = AB - ABC, acOnly = AC - ABC, bcOnly = BC - ABC;
+    if ([onlyA, onlyB, onlyC, abOnly, acOnly, bcOnly, ABC].some((v) => v < 0)) {
+      setStatus('Số liệu không nhất quán (có phần bị âm) — kiểm tra lại các số đã nhập.', 'err'); return;
+    }
+    placeText(onlyA, VENN3.posOnlyA); placeText(onlyB, VENN3.posOnlyB); placeText(onlyC, VENN3.posOnlyC);
+    placeText(abOnly, VENN3.posAB); placeText(acOnly, VENN3.posAC); placeText(bcOnly, VENN3.posBC);
+    placeText(ABC, VENN3.posABC);
+    let note = '';
+    if (U != null) {
+      const unionABC = A + B + C - AB - AC - BC + ABC;
+      const outside = U - unionABC;
+      if (outside < 0) { setStatus('Với |U| đã cho, số phần tử ngoài A∪B∪C bị âm — kiểm tra lại số liệu.', 'err'); return; }
+      placeText(outside, [-4.6, -3.6]);
+      note = `, ngoài A∪B∪C = ${outside}`;
+    }
+    setStatus(`Đã tính đủ 7 miền theo nguyên lý bù trừ${note}.`, 'ok');
+  }
+});
+
+document.getElementById('vennShadeBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const op = document.getElementById('vennOpSelect').value;
+  const fillColor = [0.2, 0.5, 0.9];
+
+  if (op === 'union') {
+    [['A', VENN2.A], ['B', VENN2.B]].forEach(([, s]) => {
+      customRegions.push({ type: 'circle', center: s.center, radius: s.radius, style: { stroke: [0.15, 0.15, 0.15], fill: fillColor, fillAlpha: 0.35, width: null, dash: null } });
+    });
+    try {
+      ggbApi.evalCommand(`Circle((${VENN2.A.center[0]},${VENN2.A.center[1]}),${VENN2.A.radius})`);
+      ggbApi.evalCommand(`Circle((${VENN2.B.center[0]},${VENN2.B.center[1]}),${VENN2.B.radius})`);
+    } catch (e) {}
+    setStatus('Đã tô A ∪ B. Bấm "Sinh code" để xuất.', 'ok');
+    return;
+  }
+
+  const poly = buildTwoCircleRegion(VENN2.A, VENN2.B, op);
+  if (!poly || poly.length < 3) {
+    setStatus('Không tính được vùng tô (2 tập hợp không giao nhau hoặc kết quả rỗng).', 'err');
+    return;
+  }
+  customRegions.push({ type: 'path', points: poly, closed: true, style: { stroke: fillColor, fill: fillColor, fillAlpha: 0.5, width: null, dash: null } });
+  try {
+    const coordList = poly.map((p) => `(${p[0].toFixed(4)},${p[1].toFixed(4)})`).join(',');
+    ggbApi.evalCommand(`Polygon({${coordList}})`);
+  } catch (e) {}
+  const opLabel = { intersect: 'A ∩ B', aMinusB: 'A \\ B', bMinusA: 'B \\ A' }[op];
+  setStatus(`Đã tô ${opLabel}. Bấm "Sinh code" để xuất.`, 'ok');
+});
+
 document.getElementById('typstLoader').addEventListener('load', () => {
 
 
@@ -1196,9 +1511,24 @@ const ggb = new GGBApplet({
   showResetIcon: true,
   allowStyleBar: true,
   language: 'vi',
+  fontSize: 22,
   appletOnLoad: (api) => {
     ggbApi = api;
     setStatus('GeoGebra đã sẵn sàng. Vẽ hình rồi bấm "Sinh code".', 'ok');
+
+    // Áp mặc định cho đối tượng MỚI vẽ: đường/đoạn/tia/vector màu đen, chấm điểm nhỏ lại còn ~1/2 mặc định.
+    // (GeoGebra không có API đổi cỡ chữ nhãn từng đối tượng lúc chạy — cỡ chữ nhãn to hơn đã áp dụng
+    // qua tham số khởi tạo fontSize ở trên, áp dụng cho toàn bộ chữ trong ứng dụng.)
+    function applyDefaultStyleToNewObject(objName) {
+      try {
+        const type = (api.getObjectType(objName) || '').toLowerCase();
+        if (['segment', 'line', 'ray', 'vector'].some((t) => type.startsWith(t))) {
+          api.setColor(objName, 0, 0, 0);
+        } else if (type.startsWith('point')) {
+          api.setPointSize(objName, 3); // mặc định GeoGebra thường là 5 — 3 xấp xỉ giảm còn một nửa
+        }
+      } catch (e) {}
+    }
 
     // Tự động sinh lại code khi có đối tượng thay đổi/thêm mới/xoá (VD: kéo điểm).
     // Tách 2 tầng debounce:
@@ -1224,7 +1554,12 @@ const ggb = new GGBApplet({
 
     let listenersOk = true;
     try { api.registerUpdateListener(scheduleAutoUpdate); } catch (e) { listenersOk = false; console.warn('[ggb2code] registerUpdateListener lỗi:', e); }
-    try { api.registerAddListener(scheduleAutoUpdate); } catch (e) { listenersOk = false; console.warn('[ggb2code] registerAddListener lỗi:', e); }
+    try {
+      api.registerAddListener((objName) => {
+        applyDefaultStyleToNewObject(objName);
+        scheduleAutoUpdate(objName);
+      });
+    } catch (e) { listenersOk = false; console.warn('[ggb2code] registerAddListener lỗi:', e); }
     try { api.registerRemoveListener(scheduleAutoUpdate); } catch (e) { listenersOk = false; console.warn('[ggb2code] registerRemoveListener lỗi:', e); }
     try { api.registerRenameListener(scheduleAutoUpdate); } catch (e) {}
     console.debug('[ggb2code] Đã đăng ký auto-update listeners, thành công:', listenersOk);
@@ -1232,12 +1567,47 @@ const ggb = new GGBApplet({
 }, true);
 ggb.inject(ggbContainerEl);
 
+const ggbWrapperEl = document.querySelector('.ggb-wrapper');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+function isInFullscreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function resizeGgbToFit() {
+  if (!ggbApi || !ggbApi.setSize) return;
+  if (isInFullscreen()) {
+    ggbApi.setSize(window.innerWidth, window.innerHeight);
+  } else {
+    ggbApi.setSize(ggbContainerEl.clientWidth, 680);
+  }
+}
+
+fullscreenBtn.addEventListener('click', () => {
+  if (!isInFullscreen()) {
+    const req = ggbWrapperEl.requestFullscreen || ggbWrapperEl.webkitRequestFullscreen;
+    if (req) {
+      req.call(ggbWrapperEl).catch((e) => setStatus('Không mở được toàn màn hình: ' + e.message, 'err'));
+    } else {
+      setStatus('Trình duyệt này không hỗ trợ chế độ toàn màn hình.', 'err');
+    }
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) exit.call(document);
+  }
+});
+
+['fullscreenchange', 'webkitfullscreenchange'].forEach((evt) => {
+  document.addEventListener(evt, () => {
+    fullscreenBtn.textContent = isInFullscreen() ? '✕ Thoát toàn màn hình' : '⛶ Toàn màn hình';
+    setTimeout(resizeGgbToFit, 100);
+  });
+});
+
 let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    if (ggbApi && ggbApi.setSize) ggbApi.setSize(ggbContainerEl.clientWidth, 680);
-  }, 200);
+  resizeTimer = setTimeout(resizeGgbToFit, 200);
 });
 
 function regenerateCode(opts = {}) {
@@ -1322,6 +1692,7 @@ document.getElementById('autoUpdateToggle').addEventListener('change', (e) => {
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   if (ggbApi) ggbApi.newConstruction();
+  customRegions = [];
   document.getElementById('tikzOut').value = '';
   document.getElementById('cetzOut').value = '';
   setStatus('Đã xoá hình vẽ.', '');
