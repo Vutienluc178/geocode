@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoGebra trực tiếp → TikZ / CeTZ</title>
+<link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
+<script src="https://tikzjax.com/v1/tikzjax.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@myriaddreamin/typst.ts/dist/esm/contrib/all-in-one-lite.bundle.js" id="typstLoader"></script>
+<style>
+  :root {
+    --bg: #0f1220; --panel: #1a1e33; --panel2: #222746;
+    --accent: #6ee7b7; --accent2: #93c5fd; --text: #e8eaf6;
+    --muted: #9aa0c3; --border: #34395c; --danger: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: linear-gradient(180deg, var(--bg), #0a0c16);
+    color: var(--text); font-family: -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    padding: 20px;
+  }
+  .wrap { max-width: 1300px; margin: 0 auto; }
+  h1 {
+    font-size: 21px; margin: 0 0 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .subtitle { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
+  .guide {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 6px 12px; margin-bottom: 10px; font-size: 11px; color: var(--muted); line-height: 1.4;
+  }
+  .guide summary { cursor: pointer; color: var(--text); font-size: 12px; font-weight: 600; list-style: none; }
+  .guide summary::-webkit-details-marker { display: none; }
+  .guide[open] summary { margin-bottom: 6px; }
+  .guide b { color: var(--text); }
+  .guide code { background: #0006; padding: 1px 6px; border-radius: 4px; color: var(--accent2); }
+
+  #ggb-container { width: 100%; height: 680px; background: #fff; border-radius: 12px; overflow: hidden; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; align-items: center; }
+  .auto-update-toggle {
+    display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); cursor: pointer;
+  }
+  .auto-update-toggle input { cursor: pointer; }
+  button {
+    cursor: pointer; border: none; border-radius: 9px; padding: 10px 18px;
+    font-size: 13.5px; font-weight: 600; transition: transform .08s ease;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: linear-gradient(90deg, var(--accent), var(--accent2)); color: #0a0c16; }
+  .btn-secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent2); }
+
+  .status { font-size: 12.5px; color: var(--muted); min-height: 18px; margin-bottom: 10px; }
+  .status.ok { color: var(--accent); }
+  .status.err { color: var(--danger); }
+
+  .template-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+  .template-row select {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; font-size: 12.5px; flex: 1; min-width: 220px;
+  }
+  .template-row button { padding: 7px 14px; font-size: 12.5px; white-space: nowrap; }
+  .code-section > summary {
+    cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600;
+    padding: 6px 4px; list-style: none; user-select: none;
+  }
+  .code-section > summary::-webkit-details-marker { display: none; }
+  .code-section > summary::before { content: '▸ '; }
+  .code-section[open] > summary::before { content: '▾ '; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 6px; }
+  @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .panel h2 {
+    font-size: 10.5px; margin: 2px 0 0; color: var(--muted); font-weight: 600;
+    letter-spacing: .3px; text-transform: uppercase;
+  }
+  textarea {
+    width: 100%; min-height: 110px; background: #0c0e1b; color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px;
+    font-family: "SF Mono",Consolas,Monaco,monospace; font-size: 10.5px; line-height: 1.4; resize: vertical;
+  }
+  .panel-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .panel-btns button { padding: 5px 10px; font-size: 11.5px; }
+  .preview-render {
+    background: #fff; border-radius: 8px; min-height: 90px; max-height: 170px;
+    display: flex; align-items: center; justify-content: center; overflow: auto; padding: 6px;
+  }
+  .preview-render.checker {
+    background-image:
+      linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    background-color: #fff;
+  }
+  .preview-render svg { max-width: 100%; height: auto; }
+  .preview-render .ph { color: #99a; font-size: 12.5px; }
+  .preview-render .err-msg { color: #b91c1c; font-size: 12px; padding: 8px; text-align: left; white-space: pre-wrap; }
+  .footer-note { margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>GeoGebra trực tiếp → TikZ / CeTZ</h1>
+  <div class="subtitle">Vẽ hình trực tiếp trong GeoGebra bên dưới, bấm "Sinh code" để lấy ngay code TikZ và CeTZ (Typst) — không cần bước xuất/dán thủ công.</div>
+
+  <details class="guide">
+    <summary>Hướng dẫn dùng & danh sách hỗ trợ (bấm để xem)</summary>
+    <b>Cách dùng:</b> Dùng công cụ trên thanh toolbar của GeoGebra để vẽ điểm, đoạn thẳng, đa giác, đường tròn, góc, vector, hàm số, văn bản... như bình thường. Khi vẽ xong, bấm nút <b>"Sinh code"</b> bên dưới — công cụ sẽ tự đọc toàn bộ hình đang có (qua GeoGebra API) và sinh code tương ứng.
+    <br><b>Đã hỗ trợ:</b> điểm, đoạn thẳng/tia/đường thẳng, đa giác, đường tròn (tâm+bán kính hoặc tâm+điểm), <b>góc</b> (tự vẽ cung + số đo, tự nhận diện góc vuông), <b>vector có mũi tên</b>, <b>đồ thị hàm số</b>, <b>văn bản tự do</b>, màu sắc, nét đứt, độ dày nét.
+    <br><b>Chưa hỗ trợ:</b> đối tượng 3D, danh sách (list), conic phức tạp, hình ảnh chèn vào.
+  </details>
+
+  <div class="template-row">
+    <select id="shapeTemplateSelect"></select>
+    <button class="btn-secondary" id="insertTemplateBtn">Chèn hình mẫu →</button>
+  </div>
+
+  <div id="ggb-container"></div>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="generateBtn">Sinh code →</button>
+    <button class="btn-secondary" id="resetBtn">Xoá hình vẽ</button>
+    <label class="auto-update-toggle">
+      <input type="checkbox" id="autoUpdateToggle" checked>
+      Tự động cập nhật code khi kéo điểm
+    </label>
+  </div>
+  <div class="status" id="status"></div>
+
+  <details class="code-section" open id="codeSection">
+    <summary>Code & xem trước (TikZ · CeTZ · SVG) — bấm để thu gọn/mở rộng</summary>
+    <div class="grid">
+      <div class="panel">
+        <h2>Code TikZ</h2>
+        <textarea id="tikzOut" readonly placeholder="Bấm 'Sinh code' để xuất..."></textarea>
+        <div class="panel-btns">
+          <button class="btn-secondary" data-copy="tikzOut">Sao chép</button>
+          <button class="btn-secondary" data-download="tikzOut" data-ext="tex">Tải .tex</button>
+          <button class="btn-secondary" id="openPrismBtn">Mở Prism</button>
+          <button class="btn-secondary" id="openOverleafBtn">Mở Overleaf</button>
+        </div>
+        <h2>Xem trước (TikZJax)</h2>
+        <div class="preview-render" id="tikzPreview"><span class="ph">Bấm "Sinh code" để xem trước</span></div>
+      </div>
+      <div class="panel">
+        <h2>Code CeTZ (Typst)</h2>
+        <textarea id="cetzOut" readonly placeholder="Bấm 'Sinh code' để xuất..."></textarea>
+        <div class="panel-btns">
+          <button class="btn-secondary" data-copy="cetzOut">Sao chép</button>
+          <button class="btn-secondary" data-download="cetzOut" data-ext="typ">Tải .typ</button>
+          <button class="btn-secondary" id="openTypstAppBtn">Mở Typst App</button>
+        </div>
+        <h2>Xem trước (typst.ts)</h2>
+        <div class="preview-render" id="cetzPreview"><span class="ph">Bấm "Sinh code" để xem trước</span></div>
+      </div>
+      <div class="panel">
+        <h2>Code SVG (nền trong suốt)</h2>
+        <textarea id="svgOut" readonly placeholder="Bấm 'Sinh code' để xuất..."></textarea>
+        <div class="panel-btns">
+          <button class="btn-secondary" data-copy="svgOut">Sao chép</button>
+          <button class="btn-secondary" data-download="svgOut" data-ext="svg">Tải .svg</button>
+          <button class="btn-secondary" id="openSvgomgBtn">Mở SVGOMG</button>
+        </div>
+        <h2>Xem trước (nền caro = trong suốt)</h2>
+        <div class="preview-render checker" id="svgPreview"><span class="ph">Bấm "Sinh code" để xem trước</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="footer-note">Applet GeoGebra tải từ geogebra.org, preview TikZ dùng TikZJax (tikzjax.com), preview CeTZ dùng typst.ts (jsdelivr) — cả 3 đều cần kết nối mạng và tự tải WASM lần đầu (có thể mất vài giây). Việc sinh code chạy hoàn toàn trong trình duyệt, không gửi hình vẽ đi máy chủ nào khác. Nút "Mở trong Prism" chỉ copy code + mở tab mới do Prism chưa có API công khai để tự động chèn nội dung — Thầy cần dán thủ công vào main.tex.</div>
+</div>
+
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+<script>
+// ===================== Helpers dùng chung =====================
+function fmt(n) {
+  return (Math.round(n * 1000) / 1000).toString();
+}
+function hexToRgbArr(hex) {
+  hex = (hex || '#000000').replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+  return [r || 0, g || 0, b || 0];
+}
+function rgbToHex([r, g, b]) {
+  const toHex = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Hex 8 ký tự (#RRGGBBAA) — dùng khi cần thể hiện đúng độ trong suốt của miền tô như trong GeoGebra
+function rgbToHex8([r, g, b], alpha) {
+  const toHex = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0');
+  const a = alpha == null ? 1 : alpha;
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(a)}`;
+}
+
+// ===================== Đọc construction từ GeoGebra API =====================
+function extractArgs(cmdString) {
+  // GeoGebra có thể trả về dạng "Polygon(A, B, C)" hoặc "Polygon[A, B, C]"
+  // tuỳ ngôn ngữ giao diện / phiên bản, nên chấp nhận cả 2 loại ngoặc.
+  const m = (cmdString || '').match(/[(\[]([^)\]]*)[)\]]/);
+  if (!m) return [];
+  return m[1].split(',').map((s) => s.trim());
+}
+
+function getPointCoord3D(api, name) {
+  try {
+    let z = 0;
+    try { z = api.getZcoord(name); } catch (e) {}
+    return [api.getXcoord(name), api.getYcoord(name), z || 0];
+  } catch (e) {
+    return [NaN, NaN, 0];
+  }
+}
+
+// Chiếu song song kiểu "vẽ hình không gian" trong SGK: quy ước điểm 3D là (x, y, z)
+// với x = ngang, y = sâu (trục lùi vào), z = cao (trục đứng).
+// Trục sâu (y) được chiếu chéo góc 45°, thu tỉ lệ 1/2 — đúng quy ước "hình chiếu trục đo xiên góc cân"
+// (cabinet oblique projection) hay dùng khi vẽ tay hình chóp/hình hộp.
+const PROJ_K = 0.5;
+const PROJ_THETA = (45 * Math.PI) / 180;
+function projectPoint([x, y, z], is3D) {
+  if (!is3D) return [x, y];
+  return [x + PROJ_K * y * Math.cos(PROJ_THETA), z + PROJ_K * y * Math.sin(PROJ_THETA)];
+}
+
+function getPointCoord(api, name) {
+  try {
+    return [api.getXcoord(name), api.getYcoord(name)];
+  } catch (e) {
+    return [NaN, NaN];
+  }
+}
+
+function isNameToken(tok) {
+  return /^[A-Za-zΑ-Ωα-ω][A-Za-z0-9_']*$/.test(tok);
+}
+
+function styleFromApi(api, name) {
+  let hex = '#000000';
+  try { hex = api.getColor(name) || '#000000'; } catch (e) {}
+  const rgb = hexToRgbArr(hex);
+  let lineStyle = 0, thickness = 5, filling = 0, fillReadOk = true;
+  try { lineStyle = api.getLineStyle(name); } catch (e) {}
+  try { thickness = api.getLineThickness(name); } catch (e) {}
+  try { filling = api.getFilling(name); } catch (e) { fillReadOk = false; }
+
+  // Theo bảng chính thức của GeoGebra (lệnh SetLineStyle):
+  // 0 = liền nét, 1 = đứt dài, 2 = đứt ngắn, 3 = chấm, 4 = chấm-gạch
+  let dash = null;
+  if (lineStyle === 1 || lineStyle === 2) dash = 'dashed';
+  else if (lineStyle === 3) dash = 'dotted';
+  else if (lineStyle === 4) dash = 'dashdot';
+
+  // Độ dày nét của GeoGebra chạy từ 1 đến 13, mặc định thường là 5
+  let width = null;
+  if (thickness <= 2) width = 'thin';
+  else if (thickness >= 10) width = 'ultra-thick';
+  else if (thickness >= 7) width = 'thick';
+
+  return {
+    stroke: rgb,
+    dash,
+    width,
+    fill: filling && filling > 0 ? rgb : null,
+    fillAlpha: filling && filling > 0 ? filling : null,
+    fillReadOk,
+  };
+}
+
+// Dùng chung cho các hình có thể có miền trong (đa giác, đường tròn...):
+// nếu đọc được độ tô -> giữ nguyên; nếu đọc LỖI thật sự -> tô dự phòng nhạt theo màu viền;
+// nếu đọc đúng và là 0% (cố tình không tô) -> tôn trọng, không ép tô.
+function withFillFallback(style) {
+  if (style.fill) return style;
+  if (!style.fillReadOk) return { ...style, fill: style.stroke, fillAlpha: 0.15 };
+  return style;
+}
+
+function buildModelFromGGB(api) {
+  const names = api.getAllObjectNames();
+  const elements = [];
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  const trackBBox = (pts) => pts.forEach(([x, y]) => {
+    xmin = Math.min(xmin, x); xmax = Math.max(xmax, x);
+    ymin = Math.min(ymin, y); ymax = Math.max(ymax, y);
+  });
+
+  // Quét trước: nếu có điểm nào toạ độ z khác 0 thì coi cả cảnh là không gian 3D,
+  // áp dụng phép chiếu song song cho MỌI điểm (kể cả điểm z=0, vì chúng vẫn thuộc mặt phẳng đáy 3D).
+  let is3D = false;
+  names.forEach((name) => {
+    try {
+      if ((api.getObjectType(name) || '').toLowerCase() === 'point3d' || (api.getObjectType(name) || '').toLowerCase() === 'point') {
+        const z = api.getZcoord ? api.getZcoord(name) : 0;
+        if (Math.abs(z) > 1e-9) is3D = true;
+      }
+    } catch (e) {}
+  });
+
+  const getProjectedPointCoord = (n) => projectPoint(getPointCoord3D(api, n), is3D);
+
+  const skippedNames = [];
+
+  names.forEach((name) => {
+   try {
+    let visible = true;
+    try { visible = api.getVisible(name); } catch (e) {}
+    if (!visible) return;
+
+    let type = '';
+    try { type = (api.getObjectType(name) || '').toLowerCase(); } catch (e) { return; }
+
+    const style = styleFromApi(api, name);
+    let cmd = '';
+    try { cmd = api.getCommandString(name, false); } catch (e) {}
+    const args = extractArgs(cmd);
+    console.debug('[ggb2code]', name, '| type=', type, '| cmd=', cmd, '| args=', args);
+
+    if (type.startsWith('point')) {
+      const pos = getProjectedPointCoord(name);
+      trackBBox([pos]);
+      elements.push({ type: 'pointmark', pos, style });
+      elements.push({ type: 'node', pos, anchor: 'below left', text: name, style });
+      return;
+    }
+
+    if (['segment', 'line', 'ray'].some((t) => type.startsWith(t))) {
+      const ptNames = args.filter(isNameToken);
+      const pts = ptNames.map((n) => getProjectedPointCoord(n)).filter((p) => isFinite(p[0]) && isFinite(p[1]));
+      if (pts.length >= 2) {
+        trackBBox(pts);
+        elements.push({ type: 'path', points: pts.slice(0, 2), closed: false, style });
+      }
+      return;
+    }
+
+    if (type.startsWith('vector')) {
+      const ptNames = args.filter(isNameToken);
+      const pts = ptNames.map((n) => getProjectedPointCoord(n)).filter((p) => isFinite(p[0]) && isFinite(p[1]));
+      if (pts.length >= 2) {
+        trackBBox(pts);
+        elements.push({ type: 'vector', points: pts.slice(0, 2), style });
+      }
+      return;
+    }
+
+    if (type.startsWith('polygon')) {
+      const ptNames = args.filter((a) => isNameToken(a) && isNaN(a));
+      const pts = ptNames.map((n) => getProjectedPointCoord(n)).filter((p) => isFinite(p[0]) && isFinite(p[1]));
+      if (pts.length >= 3) {
+        trackBBox(pts);
+        // Đa giác trong GeoGebra luôn có tô màu theo bản chất công cụ "Đa giác" (khác với vẽ rời các đoạn thẳng).
+        // Chỉ tự tô dự phòng theo màu viền khi việc đọc độ tô (getFilling) bị LỖI thật sự —
+        // nếu đọc đúng và là 0% (Thầy cố tình bỏ tô) thì tôn trọng, không ép tô.
+        const polyStyle = withFillFallback(style);
+        console.debug('[ggb2code] polygon fill:', name, '| fillReadOk=', style.fillReadOk, '| style.fill=', style.fill, '| final fill=', polyStyle.fill);
+        elements.push({ type: 'path', points: pts, closed: true, style: polyStyle });
+      }
+      return;
+    }
+
+    if (type === 'circle' || type === 'conic') {
+      const cmdLower = (cmd || '').toLowerCase();
+      const ptArgs = args.filter(isNameToken);
+
+      // Incircle(A,B,C): đường tròn NỘI TIẾP tam giác — không phải "tâm + điểm"
+      if (cmdLower.includes('incircle') && ptArgs.length >= 3) {
+        const [A, B, C] = ptArgs.slice(0, 3).map((n) => getProjectedPointCoord(n));
+        const a = Math.hypot(B[0] - C[0], B[1] - C[1]);
+        const b = Math.hypot(C[0] - A[0], C[1] - A[1]);
+        const c = Math.hypot(A[0] - B[0], A[1] - B[1]);
+        const per = a + b + c;
+        if (per > 0) {
+          const cx = (a * A[0] + b * B[0] + c * C[0]) / per;
+          const cy = (a * A[1] + b * B[1] + c * C[1]) / per;
+          const s = per / 2;
+          const area = Math.abs((B[0] - A[0]) * (C[1] - A[1]) - (C[0] - A[0]) * (B[1] - A[1])) / 2;
+          const radius = s > 0 ? area / s : 0;
+          if (radius > 0) {
+            trackBBox([[cx - radius, cy - radius], [cx + radius, cy + radius]]);
+            elements.push({ type: 'circle', center: [cx, cy], radius, style: withFillFallback(style) });
+          }
+        }
+        return;
+      }
+
+      // Circle(A,B,C) qua 3 điểm (không có tham số số): đường tròn NGOẠI TIẾP — không phải "tâm + điểm"
+      if (ptArgs.length >= 3 && args.length === ptArgs.length) {
+        const [A, B, C] = ptArgs.slice(0, 3).map((n) => getProjectedPointCoord(n));
+        const Ax = A[0], Ay = A[1], Bx = B[0], By = B[1], Cx = C[0], Cy = C[1];
+        const D = 2 * (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By));
+        if (Math.abs(D) > 1e-9) {
+          const ox = ((Ax * Ax + Ay * Ay) * (By - Cy) + (Bx * Bx + By * By) * (Cy - Ay) + (Cx * Cx + Cy * Cy) * (Ay - By)) / D;
+          const oy = ((Ax * Ax + Ay * Ay) * (Cx - Bx) + (Bx * Bx + By * By) * (Ax - Cx) + (Cx * Cx + Cy * Cy) * (Bx - Ax)) / D;
+          const radius = Math.hypot(Ax - ox, Ay - oy);
+          if (radius > 0) {
+            trackBBox([[ox - radius, oy - radius], [ox + radius, oy + radius]]);
+            elements.push({ type: 'circle', center: [ox, oy], radius, style: withFillFallback(style) });
+          }
+        }
+        return;
+      }
+
+      // Circle(Tâm, Điểm) hoặc Circle(Tâm, Bán kính): dạng 2 tham số thông thường
+      const centerName = args[0];
+      if (centerName && isNameToken(centerName)) {
+        const center = getProjectedPointCoord(centerName);
+        let radius = NaN;
+        if (args[1] && isNameToken(args[1])) {
+          const p2 = getProjectedPointCoord(args[1]);
+          radius = Math.hypot(p2[0] - center[0], p2[1] - center[1]);
+        } else if (args[1] && !isNaN(parseFloat(args[1]))) {
+          radius = parseFloat(args[1]);
+        } else {
+          try { radius = api.getValue(name); } catch (e) {}
+        }
+        if (isFinite(radius) && radius > 0) {
+          trackBBox([[center[0] - radius, center[1] - radius], [center[0] + radius, center[1] + radius]]);
+          elements.push({ type: 'circle', center, radius, style: withFillFallback(style) });
+        }
+      }
+      return;
+    }
+
+    if (type === 'angle') {
+      // Angle(A, B, C): B là đỉnh, đọc 3 tên điểm từ command string
+      const ptNames = args.filter(isNameToken);
+      if (ptNames.length >= 3) {
+        const A = getProjectedPointCoord(ptNames[0]);
+        const B = getProjectedPointCoord(ptNames[1]);
+        const C = getProjectedPointCoord(ptNames[2]);
+        let valRad = NaN;
+        try { valRad = api.getValue(name); } catch (e) {}
+        const distA = Math.hypot(A[0] - B[0], A[1] - B[1]);
+        const distC = Math.hypot(C[0] - B[0], C[1] - B[1]);
+        const r = Math.max(0.2, Math.min(0.6, Math.min(distA, distC) * 0.28));
+        const isRight = isFinite(valRad) && Math.abs(valRad - Math.PI / 2) < 0.02;
+        trackBBox([B]);
+        if (isRight && distA > 0 && distC > 0) {
+          const ua = [(A[0] - B[0]) / distA, (A[1] - B[1]) / distA];
+          const uc = [(C[0] - B[0]) / distC, (C[1] - B[1]) / distC];
+          const s = r * 0.8;
+          const p1 = [B[0] + ua[0] * s, B[1] + ua[1] * s];
+          const p2 = [B[0] + ua[0] * s + uc[0] * s, B[1] + ua[1] * s + uc[1] * s];
+          const p3 = [B[0] + uc[0] * s, B[1] + uc[1] * s];
+          elements.push({ type: 'path', points: [p1, p2, p3], closed: false, style });
+        } else if (distA > 0 && distC > 0) {
+          let a0 = (Math.atan2(A[1] - B[1], A[0] - B[0]) * 180) / Math.PI;
+          let a1 = (Math.atan2(C[1] - B[1], C[0] - B[0]) * 180) / Math.PI;
+          if (a0 < 0) a0 += 360;
+          if (a1 < 0) a1 += 360;
+          if (a1 < a0) a1 += 360;
+          elements.push({ type: 'arc', center: B, radius: r, startDeg: a0, endDeg: a1, style });
+          if (isFinite(valRad)) {
+            const midDeg = ((a0 + a1) / 2) * (Math.PI / 180);
+            const labelR = r + 0.22;
+            const labelPos = [B[0] + labelR * Math.cos(midDeg), B[1] + labelR * Math.sin(midDeg)];
+            const deg = Math.round((valRad * 180) / Math.PI);
+            elements.push({ type: 'anglelabel', pos: labelPos, deg, style });
+          }
+        }
+      }
+      return;
+    }
+
+    if (type === 'function') {
+      let bounds;
+      try {
+        const propsRaw = api.getViewProperties(1);
+        const props = typeof propsRaw === 'string' ? JSON.parse(propsRaw) : propsRaw;
+        bounds = { xMin: props.xMin, xMax: props.xMin + props.width * props.invXscale };
+      } catch (e) { bounds = { xMin: -6, xMax: 6 }; }
+      const steps = 60;
+      const runs = [];
+      let current = [];
+      for (let i = 0; i <= steps; i++) {
+        const x = bounds.xMin + ((bounds.xMax - bounds.xMin) * i) / steps;
+        let y = NaN;
+        try {
+          const res = api.evalCommandCAS(`y=${name}(${x})`);
+          y = parseFloat(res);
+        } catch (e) {}
+        if (isFinite(y) && Math.abs(y) < 1e4) {
+          current.push([x, y]);
+        } else if (current.length >= 2) {
+          runs.push(current); current = [];
+        } else { current = []; }
+      }
+      if (current.length >= 2) runs.push(current);
+      runs.forEach((pts) => { trackBBox(pts); elements.push({ type: 'path', points: pts, closed: false, style }); });
+      return;
+    }
+
+    if (type === 'text') {
+      let x = null, y = null, content = '';
+      try { content = (api.getValueString(name) || '').replace(/^"+|"+$/g, ''); } catch (e) {}
+      try {
+        const xml = api.getXML(name);
+        const m = xml.match(/<startPoint\s+x="(-?[\d.]+)"\s+y="(-?[\d.]+)"/);
+        if (m) { x = parseFloat(m[1]); y = parseFloat(m[2]); }
+      } catch (e) {}
+      if (x !== null && y !== null && content) {
+        trackBBox([[x, y]]);
+        elements.push({ type: 'node', pos: [x, y], anchor: 'right', text: content, style, isPlainText: true });
+      }
+      return;
+    }
+    // các loại khác (list, boolean, hình 3D...) vẫn bỏ qua
+   } catch (e) {
+    console.warn('[ggb2code] Bỏ qua object do lỗi:', name, e);
+    skippedNames.push(name);
+   }
+  });
+
+  if (!isFinite(xmin)) { xmin = 0; xmax = 1; ymin = 0; ymax = 1; }
+  // Sắp xếp lại thứ tự vẽ: đường/hình (cạnh, vòng tròn, cung...) vẽ TRƯỚC,
+  // chấm điểm và nhãn chữ vẽ SAU — để điểm luôn nổi rõ, không bị nét đường đè lên.
+  const Z_ORDER = { circle: 0, arc: 0, path: 0, vector: 0, pointmark: 1, anglelabel: 2, node: 2 };
+  elements.sort((a, b) => (Z_ORDER[a.type] ?? 0) - (Z_ORDER[b.type] ?? 0));
+
+  return { elements, bbox: { xmin, xmax, ymin, ymax }, skippedNames, is3D };
+}
+
+// ===================== Model -> CeTZ (Typst) =====================
+// Độ dày nét dùng chung cho cả TikZ/CeTZ/SVG — đậm hơn mặc định cũ để giống nét vẽ SGK
+function widthPt(style) {
+  if (style.width === 'thin') return 0.6;
+  if (style.width === 'thick') return 1.3;
+  if (style.width === 'ultra-thick') return 1.8;
+  return 0.9; // mặc định (trước đây 0.7pt, hơi mảnh)
+}
+
+function strokeStrCetz(style) {
+  const hex = rgbToHex(style.stroke || [0, 0, 0]);
+  const width = `${widthPt(style)}pt`;
+  let dashPart = '';
+  if (style.dash === 'dashed') dashPart = ', dash: "dashed"';
+  if (style.dash === 'dotted') dashPart = ', dash: "dotted"';
+  if (style.dash === 'dashdot') dashPart = ', dash: "dash-dotted"';
+  return `(paint: rgb("${hex}"), thickness: ${width}${dashPart})`;
+}
+function anchorMapCetz(tikzAnchor) {
+  const map = {
+    'below left': 'north-east', 'below right': 'north-west',
+    'above left': 'south-east', 'above right': 'south-west',
+    below: 'north', above: 'south', left: 'east', right: 'west',
+    center: 'center',
+  };
+  return map[(tikzAnchor || '').trim()] || 'south';
+}
+function generateCetz(model) {
+  const lines = ['#import "@preview/cetz:0.5.2"', '', '#cetz.canvas({', '  import cetz.draw: *', ''];
+  model.elements.forEach((el) => {
+    if (el.type === 'circle') {
+      const fillOpt = el.style.fill ? `, fill: rgb("${rgbToHex8(el.style.fill, el.style.fillAlpha)}")` : '';
+      lines.push(`  circle((${fmt(el.center[0])}, ${fmt(el.center[1])}), radius: ${fmt(el.radius)}${fillOpt}, stroke: ${strokeStrCetz(el.style)})`);
+    } else if (el.type === 'arc') {
+      lines.push(`  arc((${fmt(el.center[0] + el.radius * Math.cos(el.startDeg * Math.PI / 180))}, ${fmt(el.center[1] + el.radius * Math.sin(el.startDeg * Math.PI / 180))}), start: ${fmt(el.startDeg)}deg, stop: ${fmt(el.endDeg)}deg, radius: ${fmt(el.radius)}, stroke: ${strokeStrCetz(el.style)})`);
+    } else if (el.type === 'vector') {
+      const [p1, p2] = el.points;
+      lines.push(`  line((${fmt(p1[0])}, ${fmt(p1[1])}), (${fmt(p2[0])}, ${fmt(p2[1])}), mark: (end: ">"), stroke: ${strokeStrCetz(el.style)})`);
+    } else if (el.type === 'path') {
+      const pts = el.points.map(([x, y]) => `(${fmt(x)}, ${fmt(y)})`).join(', ');
+      const fillOpt = el.style.fill ? `, fill: rgb("${rgbToHex8(el.style.fill, el.style.fillAlpha)}")` : '';
+      const closeOpt = el.closed ? ', close: true' : '';
+      lines.push(`  line(${pts}${closeOpt}${fillOpt}, stroke: ${strokeStrCetz(el.style)})`);
+    } else if (el.type === 'pointmark') {
+      lines.push(`  circle((${fmt(el.pos[0])}, ${fmt(el.pos[1])}), radius: 0.09, fill: white, stroke: none)`);
+      lines.push(`  circle((${fmt(el.pos[0])}, ${fmt(el.pos[1])}), radius: 0.055, fill: rgb("${rgbToHex(el.style.stroke)}"), stroke: none)`);
+    } else if (el.type === 'anglelabel') {
+      lines.push(`  content((${fmt(el.pos[0])}, ${fmt(el.pos[1])}), anchor: "center", [${el.deg}°])`);
+    } else if (el.type === 'node') {
+      const anchor = anchorMapCetz(el.anchor);
+      const text = el.text.replace(/"/g, '\\"');
+      lines.push(`  content((${fmt(el.pos[0])}, ${fmt(el.pos[1])}), anchor: "${anchor}", [${text}])`);
+    }
+  });
+  lines.push('})');
+  return lines.join('\n');
+}
+
+// ===================== Model -> TikZ =====================
+function generateTikZ(model) {
+  const colorMap = new Map();
+  function colorName(rgb) {
+    const key = rgb.map((v) => v.toFixed(4)).join(',');
+    if (!colorMap.has(key)) colorMap.set(key, { name: `c${colorMap.size}`, rgb });
+    return colorMap.get(key).name;
+  }
+  function tikzStyleTokens(style) {
+    const tokens = [];
+    if (style.dash === 'dashed') tokens.push('dashed');
+    else if (style.dash === 'dotted') tokens.push('dotted');
+    else if (style.dash === 'dashdot') tokens.push('dash pattern=on 3pt off 2pt on 1pt off 2pt');
+    tokens.push(`line width=${widthPt(style)}pt`);
+    return tokens;
+  }
+  const body = [];
+  model.elements.forEach((el) => {
+    if (el.type === 'circle') {
+      const cname = colorName(el.style.stroke || [0, 0, 0]);
+      const opts = [`color=${cname}`, ...tikzStyleTokens(el.style)];
+      if (el.style.fill) {
+        opts.push(`fill=${colorName(el.style.fill)}`);
+        if (el.style.fillAlpha != null && el.style.fillAlpha < 1) opts.push(`fill opacity=${el.style.fillAlpha.toFixed(2)}`);
+      }
+      const cmdName = el.style.fill ? 'filldraw' : 'draw';
+      body.push(`\\${cmdName}[${opts.join(',')}] (${fmt(el.center[0])},${fmt(el.center[1])}) circle (${fmt(el.radius)}cm);`);
+    } else if (el.type === 'arc') {
+      const cname = colorName(el.style.stroke || [0, 0, 0]);
+      const sx = el.center[0] + el.radius * Math.cos((el.startDeg * Math.PI) / 180);
+      const sy = el.center[1] + el.radius * Math.sin((el.startDeg * Math.PI) / 180);
+      body.push(`\\draw[color=${cname}] (${fmt(sx)},${fmt(sy)}) arc (${fmt(el.startDeg)}:${fmt(el.endDeg)}:${fmt(el.radius)}cm);`);
+    } else if (el.type === 'vector') {
+      const cname = colorName(el.style.stroke || [0, 0, 0]);
+      const [p1, p2] = el.points;
+      body.push(`\\draw[->,color=${cname}] (${fmt(p1[0])},${fmt(p1[1])}) -- (${fmt(p2[0])},${fmt(p2[1])});`);
+    } else if (el.type === 'anglelabel') {
+      body.push(`\\node at (${fmt(el.pos[0])},${fmt(el.pos[1])}) {$${el.deg}^\\circ$};`);
+    } else if (el.type === 'path') {
+      const cname = colorName(el.style.stroke || [0, 0, 0]);
+      const opts = [`color=${cname}`];
+      if (el.style.fill) {
+        opts.push(`fill=${colorName(el.style.fill)}`);
+        if (el.style.fillAlpha != null && el.style.fillAlpha < 1) opts.push(`fill opacity=${el.style.fillAlpha.toFixed(2)}`);
+      }
+      opts.push(...tikzStyleTokens(el.style));
+      const cmdName = el.style.fill ? 'filldraw' : 'draw';
+      const pts = el.points.map(([x, y]) => `(${fmt(x)},${fmt(y)})`).join(' -- ');
+      const close = el.closed ? ' -- cycle' : '';
+      body.push(`\\${cmdName}[${opts.join(',')}] ${pts}${close};`);
+    } else if (el.type === 'pointmark') {
+      const cname = colorName(el.style.stroke || [0, 0, 0]);
+      body.push(`\\fill[white] (${fmt(el.pos[0])},${fmt(el.pos[1])}) circle (2.2pt);`);
+      body.push(`\\fill[color=${cname}] (${fmt(el.pos[0])},${fmt(el.pos[1])}) circle (1.3pt);`);
+    } else if (el.type === 'node') {
+      body.push(`\\node[${el.anchor || 'below'}] at (${fmt(el.pos[0])},${fmt(el.pos[1])}) {$${el.text}$};`);
+    }
+  });
+  const defs = [...colorMap.values()].map((c) => `\\definecolor{${c.name}}{rgb}{${c.rgb.map((v) => v.toFixed(4)).join(',')}}`);
+  return [
+    '\\begin{tikzpicture}[line cap=round, line join=round, x=1cm, y=1cm]',
+    ...defs.map((l) => '  ' + l),
+    ...body.map((l) => '  ' + l),
+    '\\end{tikzpicture}',
+  ].join('\n');
+}
+
+// ===================== Model -> SVG (nền trong suốt) =====================
+// Dịch nhãn ra khỏi điểm theo đúng hướng neo (anchor) mà GeoGebra dùng — tránh nhãn đè lên chấm điểm.
+function svgAnchorOffset(anchor) {
+  const a = (anchor || '').trim();
+  const OFF = 13; // khoảng cách (px) từ điểm ra nhãn
+  const map = {
+    'below left': { dx: -OFF, dy: OFF + 3, textAnchor: 'end', baseline: 'hanging' },
+    'below right': { dx: OFF, dy: OFF + 3, textAnchor: 'start', baseline: 'hanging' },
+    'above left': { dx: -OFF, dy: -OFF, textAnchor: 'end', baseline: 'alphabetic' },
+    'above right': { dx: OFF, dy: -OFF, textAnchor: 'start', baseline: 'alphabetic' },
+    below: { dx: 0, dy: OFF + 5, textAnchor: 'middle', baseline: 'hanging' },
+    above: { dx: 0, dy: -OFF, textAnchor: 'middle', baseline: 'alphabetic' },
+    left: { dx: -OFF - 3, dy: 0, textAnchor: 'end', baseline: 'middle' },
+    right: { dx: OFF + 3, dy: 0, textAnchor: 'start', baseline: 'middle' },
+    center: { dx: 0, dy: 0, textAnchor: 'middle', baseline: 'middle' },
+  };
+  return map[a] || map.below;
+}
+
+function generateSVG(model) {
+  const pad = 0.6;
+  const { xmin, xmax, ymin, ymax } = model.bbox;
+  const w = Math.max(xmax - xmin, 0.1) + pad * 2;
+  const h = Math.max(ymax - ymin, 0.1) + pad * 2;
+  const scale = 60;
+  const svgW = +(w * scale).toFixed(1);
+  const svgH = +(h * scale).toFixed(1);
+  const X = (x) => (x - xmin + pad) * scale;
+  const Y = (y) => svgH - (y - ymin + pad) * scale;
+
+  const defsSet = [];
+  const parts = [];
+  model.elements.forEach((el) => {
+    const style = el.style || {};
+    const strokeColor = rgbToHex(style.stroke || [0, 0, 0]);
+    let dash = null;
+    if (style.dash === 'dashed') dash = '7,4';
+    else if (style.dash === 'dotted') dash = '2,3';
+    else if (style.dash === 'dashdot') dash = '7,3,1.5,3';
+    const strokeWidth = widthPt(style) * 1.4;
+    const dashAttr = dash ? ` stroke-dasharray="${dash}"` : '';
+
+    if (el.type === 'circle') {
+      const fillColor = style.fill ? rgbToHex(style.fill) : 'none';
+      const fillOpacityAttr = style.fill && style.fillAlpha != null ? ` fill-opacity="${style.fillAlpha.toFixed(2)}"` : '';
+      parts.push(`<circle cx="${X(el.center[0]).toFixed(2)}" cy="${Y(el.center[1]).toFixed(2)}" r="${(el.radius * scale).toFixed(2)}" fill="${fillColor}"${fillOpacityAttr} stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashAttr}/>`);
+    } else if (el.type === 'arc') {
+      const sx = X(el.center[0] + el.radius * Math.cos((el.startDeg * Math.PI) / 180));
+      const sy = Y(el.center[1] + el.radius * Math.sin((el.startDeg * Math.PI) / 180));
+      const ex = X(el.center[0] + el.radius * Math.cos((el.endDeg * Math.PI) / 180));
+      const ey = Y(el.center[1] + el.radius * Math.sin((el.endDeg * Math.PI) / 180));
+      const largeArc = el.endDeg - el.startDeg > 180 ? 1 : 0;
+      parts.push(`<path d="M ${sx.toFixed(2)} ${sy.toFixed(2)} A ${(el.radius * scale).toFixed(2)} ${(el.radius * scale).toFixed(2)} 0 ${largeArc} 0 ${ex.toFixed(2)} ${ey.toFixed(2)}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashAttr}/>`);
+    } else if (el.type === 'vector') {
+      const [p1, p2] = el.points;
+      const markId = `arrow_${defsSet.length}`;
+      defsSet.push(`<marker id="${markId}" markerWidth="8" markerHeight="8" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${strokeColor}"/></marker>`);
+      parts.push(`<line x1="${X(p1[0]).toFixed(2)}" y1="${Y(p1[1]).toFixed(2)}" x2="${X(p2[0]).toFixed(2)}" y2="${Y(p2[1]).toFixed(2)}" stroke="${strokeColor}" stroke-width="${strokeWidth}" marker-end="url(#${markId})"/>`);
+    } else if (el.type === 'path') {
+      const pts = el.points.map(([x, y]) => `${X(x).toFixed(2)},${Y(y).toFixed(2)}`).join(' ');
+      const fillColor = style.fill ? rgbToHex(style.fill) : 'none';
+      const fillOpacityAttr = style.fill && style.fillAlpha != null ? ` fill-opacity="${style.fillAlpha.toFixed(2)}"` : '';
+      const tag = el.closed ? 'polygon' : 'polyline';
+      parts.push(`<${tag} points="${pts}" fill="${fillColor}"${fillOpacityAttr} stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashAttr}/>`);
+    } else if (el.type === 'pointmark') {
+      parts.push(`<circle cx="${X(el.pos[0]).toFixed(2)}" cy="${Y(el.pos[1]).toFixed(2)}" r="3.5" fill="${strokeColor}" stroke="none"/>`);
+    } else if (el.type === 'anglelabel') {
+      parts.push(`<text x="${X(el.pos[0]).toFixed(2)}" y="${Y(el.pos[1]).toFixed(2)}" font-size="13" fill="${strokeColor}" text-anchor="middle" dominant-baseline="middle">${el.deg}°</text>`);
+    } else if (el.type === 'node') {
+      const safe = (el.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const { dx, dy, textAnchor, baseline } = svgAnchorOffset(el.anchor);
+      const tx = X(el.pos[0]) + dx;
+      const ty = Y(el.pos[1]) + dy;
+      parts.push(`<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="14" fill="${strokeColor}" text-anchor="${textAnchor}" dominant-baseline="${baseline}">${safe}</text>`);
+    }
+  });
+
+  const defsBlock = defsSet.length ? `<defs>${defsSet.join('')}</defs>` : '';
+  // Không vẽ rect nền => nền trong suốt, có thể chèn trực tiếp vào Word/PowerPoint/website nền màu bất kỳ.
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}">\n  ${defsBlock}\n  ${parts.join('\n  ')}\n</svg>`;
+}
+const statusEl = document.getElementById('status');
+function setStatus(msg, type) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status' + (type ? ' ' + type : '');
+}
+
+let ggbApi = null;
+let autoUpdateEnabled = true;
+let typstReady = false;
+
+// ===================== Menu hình mẫu THCS / THPT =====================
+const SHAPE_TEMPLATES = [
+  // ---- THCS ----
+  { group: 'THCS', label: 'Tam giác thường', cmds: ['A=(0,0)', 'B=(5,0)', 'C=(2,4)', 'Polygon(A,B,C)'] },
+  { group: 'THCS', label: 'Tam giác cân', cmds: ['A=(2,4)', 'B=(0,0)', 'C=(4,0)', 'Polygon(A,B,C)'] },
+  { group: 'THCS', label: 'Tam giác đều', cmds: ['A=(0,0)', 'B=(5,0)', 'C=(2.5,4.33)', 'Polygon(A,B,C)'] },
+  { group: 'THCS', label: 'Tam giác vuông', cmds: ['A=(0,0)', 'B=(5,0)', 'C=(0,3)', 'Polygon(A,B,C)'] },
+  { group: 'THCS', label: 'Tam giác vuông cân', cmds: ['A=(0,0)', 'B=(4,0)', 'C=(0,4)', 'Polygon(A,B,C)'] },
+  { group: 'THCS', label: 'Tam giác + đường cao', cmds: [
+    'A=(0,0)', 'B=(6,0)', 'C=(2,4)', 'Polygon(A,B,C)',
+    'd1=PerpendicularLine(C,Line(A,B))', 'H=Intersect(d1,Line(A,B))', 'Segment(C,H)',
+  ] },
+  { group: 'THCS', label: 'Tam giác + đường trung tuyến', cmds: [
+    'A=(0,0)', 'B=(6,0)', 'C=(2,4)', 'Polygon(A,B,C)', 'M=Midpoint(A,B)', 'Segment(C,M)',
+  ] },
+  { group: 'THCS', label: 'Tam giác + đường tròn ngoại tiếp', cmds: [
+    'A=(0,0)', 'B=(6,0)', 'C=(2,5)', 'Polygon(A,B,C)', 'Circle(A,B,C)',
+  ] },
+  { group: 'THCS', label: 'Tam giác + đường tròn nội tiếp', cmds: [
+    'A=(0,0)', 'B=(6,0)', 'C=(2,5)', 'Polygon(A,B,C)', 'Incircle(A,B,C)',
+  ] },
+  { group: 'THCS', label: 'Hình vuông', cmds: ['A=(0,0)', 'B=(4,0)', 'C=(4,4)', 'D=(0,4)', 'Polygon(A,B,C,D)'] },
+  { group: 'THCS', label: 'Hình chữ nhật', cmds: ['A=(0,0)', 'B=(5,0)', 'C=(5,3)', 'D=(0,3)', 'Polygon(A,B,C,D)'] },
+  { group: 'THCS', label: 'Hình thoi', cmds: ['A=(0,-3)', 'B=(4,0)', 'C=(0,3)', 'D=(-4,0)', 'Polygon(A,B,C,D)'] },
+  { group: 'THCS', label: 'Hình bình hành', cmds: ['A=(0,0)', 'B=(5,0)', 'C=(7,3)', 'D=(2,3)', 'Polygon(A,B,C,D)'] },
+  { group: 'THCS', label: 'Hình thang cân', cmds: ['A=(0,0)', 'B=(6,0)', 'C=(4,3)', 'D=(2,3)', 'Polygon(A,B,C,D)'] },
+  { group: 'THCS', label: 'Đường tròn + tiếp tuyến', cmds: ['O=(0,0)', 'c1=Circle(O,3)', 'P=(6,0)', 'Tangent(P,c1)'] },
+  // ---- THPT ----
+  { group: 'THPT', label: 'Đường tròn lượng giác', cmds: [
+    'O=(0,0)', 'c1=Circle(O,1)', 'A=(1,0)', 'M=(cos(40*pi/180),sin(40*pi/180))',
+    'Segment(O,A)', 'Segment(O,M)', 'Angle(A,O,M)',
+  ] },
+  { group: 'THPT', label: 'Tổng hai vector', cmds: [
+    'A=(0,0)', 'B=(3,1)', 'C=(1,3)', 'u1=Vector(A,B)', 'v1=Vector(A,C)', 'w1=u1+v1',
+  ] },
+  { group: 'THPT', label: 'Đồ thị hàm bậc 2 (parabol)', cmds: ['f(x)=x^2-2x-1'] },
+  { group: 'THPT', label: 'Elip (2 tiêu điểm)', cmds: ['Ellipse((-3,0),(3,0),5)'] },
+  // ---- Không gian (khối đa diện dựng từ điểm/cạnh/mặt — chiếu song song để xuất được code) ----
+  { group: 'Không gian', label: 'Hình hộp chữ nhật ABCD.A\'B\'C\'D\'', is3D: true, cmds: [
+    "A=(0,0,0)", "B=(4,0,0)", "C=(4,3,0)", "D=(0,3,0)",
+    "A'=(0,0,2)", "B'=(4,0,2)", "C'=(4,3,2)", "D'=(0,3,2)",
+    'Polygon(A,B,C,D)', "Polygon(A',B',C',D')",
+    "Segment(A,A')", "Segment(B,B')", "Segment(C,C')", "Segment(D,D')",
+  ] },
+  { group: 'Không gian', label: 'Hình lập phương ABCD.A\'B\'C\'D\'', is3D: true, cmds: [
+    "A=(0,0,0)", "B=(3,0,0)", "C=(3,3,0)", "D=(0,3,0)",
+    "A'=(0,0,3)", "B'=(3,0,3)", "C'=(3,3,3)", "D'=(0,3,3)",
+    'Polygon(A,B,C,D)', "Polygon(A',B',C',D')",
+    "Segment(A,A')", "Segment(B,B')", "Segment(C,C')", "Segment(D,D')",
+  ] },
+  { group: 'Không gian', label: 'Hình chóp tam giác đều S.ABC', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(2,3.46,0)', 'S=(2,1.15,4)',
+    'Polygon(A,B,C)', 'Segment(S,A)', 'Segment(S,B)', 'Segment(S,C)',
+  ] },
+  { group: 'Không gian', label: 'Hình chóp tứ giác đều S.ABCD', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(4,4,0)', 'D=(0,4,0)', 'S=(2,2,5)',
+    'Polygon(A,B,C,D)', 'Segment(S,A)', 'Segment(S,B)', 'Segment(S,C)', 'Segment(S,D)',
+  ] },
+  { group: 'Không gian', label: 'Hình lăng trụ đứng tam giác ABC.A\'B\'C\'', is3D: true, cmds: [
+    "A=(0,0,0)", "B=(4,0,0)", "C=(1,3,0)",
+    "A'=(0,0,3)", "B'=(4,0,3)", "C'=(1,3,3)",
+    'Polygon(A,B,C)', "Polygon(A',B',C')",
+    "Segment(A,A')", "Segment(B,B')", "Segment(C,C')",
+  ] },
+  { group: 'Không gian', label: 'Hình chóp cụt tam giác', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(2,3.46,0)',
+    "A'=(1,0.58,3)", "B'=(3,0.58,3)", "C'=(2,2.31,3)",
+    'Polygon(A,B,C)', "Polygon(A',B',C')",
+    "Segment(A,A')", "Segment(B,B')", "Segment(C,C')",
+  ] },
+  { group: 'Không gian', label: 'Hình nón (chỉ hiển thị, chưa xuất code)', is3D: true, noExport: true, cmds: [
+    'Cone((0,0,0),(0,0,4),2)',
+  ] },
+  { group: 'Không gian', label: 'Hình trụ (chỉ hiển thị, chưa xuất code)', is3D: true, noExport: true, cmds: [
+    'Cylinder((0,0,0),(0,0,4),2)',
+  ] },
+  { group: 'Không gian', label: 'Hình cầu (chỉ hiển thị, chưa xuất code)', is3D: true, noExport: true, cmds: [
+    'Sphere((0,0,0),3)',
+  ] },
+];
+
+function populateTemplateSelect() {
+  const sel = document.getElementById('shapeTemplateSelect');
+  const groups = {};
+  SHAPE_TEMPLATES.forEach((t, i) => {
+    if (!groups[t.group]) groups[t.group] = document.createElement('optgroup');
+    groups[t.group].label = t.group;
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = t.label;
+    groups[t.group].appendChild(opt);
+  });
+  Object.values(groups).forEach((g) => sel.appendChild(g));
+}
+populateTemplateSelect();
+
+document.getElementById('insertTemplateBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong, đợi một chút rồi thử lại.', 'err'); return; }
+  const idx = parseInt(document.getElementById('shapeTemplateSelect').value, 10);
+  const template = SHAPE_TEMPLATES[idx];
+  if (!template) return;
+
+  let hasObjects = false;
+  try { hasObjects = ggbApi.getObjectNumber() > 0; } catch (e) {}
+  if (hasObjects && !confirm('Chèn hình mẫu sẽ xoá hình đang vẽ (do dùng lại tên điểm A, B, C...). Tiếp tục?')) {
+    return;
+  }
+
+  try { ggbApi.newConstruction(); } catch (e) {}
+  if (template.is3D) {
+    try { ggbApi.enable3D(true); } catch (e) {}
+  }
+  const failedCmds = [];
+  template.cmds.forEach((cmd) => {
+    try {
+      const ok = ggbApi.evalCommand(cmd);
+      if (!ok) failedCmds.push(cmd);
+    } catch (e) {
+      failedCmds.push(cmd);
+    }
+  });
+  try { ggbApi.showAllObjects(); } catch (e) {}
+
+  if (failedCmds.length > 0) {
+    setStatus(`Đã chèn "${template.label}" nhưng có ${failedCmds.length} lệnh lỗi: ${failedCmds.join(' | ')}`, 'err');
+  } else if (template.noExport) {
+    setStatus(`Đã chèn "${template.label}". Lưu ý: khối tròn xoay (nón/trụ/cầu) hiện CHƯA hỗ trợ sinh code TikZ/CeTZ, chỉ xem trực quan trong GeoGebra.`, 'ok');
+  } else if (template.is3D) {
+    setStatus(`Đã chèn hình không gian "${template.label}". Bấm "Sinh code" để xuất theo phép chiếu song song (trục sâu chéo 45°, tỉ lệ 1/2).`, 'ok');
+  } else {
+    setStatus(`Đã chèn hình mẫu "${template.label}". Có thể kéo các điểm để chỉnh hình, rồi bấm "Sinh code".`, 'ok');
+  }
+});
+
+
+document.getElementById('typstLoader').addEventListener('load', () => {
+  try {
+    $typst.setCompilerInitOptions({
+      getModule: () => 'https://cdn.jsdelivr.net/npm/@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm',
+    });
+    $typst.setRendererInitOptions({
+      getModule: () => 'https://cdn.jsdelivr.net/npm/@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm',
+    });
+    typstReady = true;
+  } catch (e) {
+    console.error('Không khởi tạo được typst.ts:', e);
+  }
+});
+
+function renderTikzPreview(tikzCode) {
+  const box = document.getElementById('tikzPreview');
+  box.innerHTML = '<span class="ph">Đang biên dịch TikZ...</span>';
+  const scriptEl = document.createElement('script');
+  scriptEl.type = 'text/tikz';
+  scriptEl.text = tikzCode;
+  box.innerHTML = '';
+  box.appendChild(scriptEl);
+  // Nếu sau ~6s vẫn chưa có <svg> xuất hiện, có thể TikZJax không tự phát hiện script chèn động
+  setTimeout(() => {
+    if (!box.querySelector('svg')) {
+      box.innerHTML = '<span class="ph err-msg">Chưa thấy kết quả sau vài giây — TikZJax có thể cần tải WASM lần đầu (chờ thêm) hoặc không phát hiện được code chèn động. Thử tải lại trang nếu vẫn không hiện.</span>';
+    }
+  }, 6000);
+}
+
+async function renderCetzPreview(cetzBody) {
+  const box = document.getElementById('cetzPreview');
+  box.innerHTML = '<span class="ph">Đang biên dịch Typst...</span>';
+  if (!typstReady || typeof $typst === 'undefined') {
+    box.innerHTML = '<span class="ph err-msg">typst.ts chưa sẵn sàng (đang tải WASM lần đầu, có thể mất vài giây) — bấm "Sinh code" lại sau một lúc.</span>';
+    return;
+  }
+  const mainContent = `#set page(width: auto, height: auto, margin: 0.5cm)\n${cetzBody}`;
+  try {
+    const svg = await $typst.svg({ mainContent });
+    box.innerHTML = svg;
+  } catch (e) {
+    box.innerHTML = `<span class="err-msg">Lỗi biên dịch Typst:\n${(e && e.message) || e}</span>`;
+  }
+}
+const ggbContainerEl = document.getElementById('ggb-container');
+const ggb = new GGBApplet({
+  appName: 'geometry',
+  width: ggbContainerEl.clientWidth || 1200,
+  height: 680,
+  showToolBar: true,
+  showMenuBar: false,
+  showAlgebraInput: false,
+  showResetIcon: true,
+  allowStyleBar: true,
+  language: 'vi',
+  appletOnLoad: (api) => {
+    ggbApi = api;
+    setStatus('GeoGebra đã sẵn sàng. Vẽ hình rồi bấm "Sinh code".', 'ok');
+
+    // Tự động sinh lại code khi có đối tượng thay đổi/thêm mới/xoá (VD: kéo điểm).
+    // Tách 2 tầng debounce:
+    //  - Code text (TikZ/CeTZ/SVG): cập nhật nhanh (120ms) để luôn khớp với GeoGebra.
+    //  - Preview biên dịch thật (TikZJax/typst.ts): nặng hơn nên chờ ngừng thao tác 700ms mới biên dịch lại,
+    //    tránh vừa giật máy vừa để preview đứng hình quá lâu không khớp hình đang kéo.
+    let autoUpdateTimer = null;
+    let heavyPreviewTimer = null;
+    const scheduleAutoUpdate = (objName) => {
+      console.debug('[ggb2code] auto-update event, object:', objName);
+      if (!autoUpdateEnabled || !ggbApi) return;
+      clearTimeout(autoUpdateTimer);
+      autoUpdateTimer = setTimeout(() => {
+        regenerateCode({ silent: true, skipHeavyPreview: true });
+      }, 120);
+
+      clearTimeout(heavyPreviewTimer);
+      heavyPreviewTimer = setTimeout(() => {
+        renderTikzPreview(document.getElementById('tikzOut').value);
+        renderCetzPreview(document.getElementById('cetzOut').value);
+      }, 700);
+    };
+
+    let listenersOk = true;
+    try { api.registerUpdateListener(scheduleAutoUpdate); } catch (e) { listenersOk = false; console.warn('[ggb2code] registerUpdateListener lỗi:', e); }
+    try { api.registerAddListener(scheduleAutoUpdate); } catch (e) { listenersOk = false; console.warn('[ggb2code] registerAddListener lỗi:', e); }
+    try { api.registerRemoveListener(scheduleAutoUpdate); } catch (e) { listenersOk = false; console.warn('[ggb2code] registerRemoveListener lỗi:', e); }
+    try { api.registerRenameListener(scheduleAutoUpdate); } catch (e) {}
+    console.debug('[ggb2code] Đã đăng ký auto-update listeners, thành công:', listenersOk);
+  },
+}, true);
+ggb.inject(ggbContainerEl);
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (ggbApi && ggbApi.setSize) ggbApi.setSize(ggbContainerEl.clientWidth, 680);
+  }, 200);
+});
+
+function regenerateCode(opts = {}) {
+  const { silent = false, skipHeavyPreview = false } = opts;
+  if (!ggbApi) { if (!silent) setStatus('GeoGebra chưa tải xong, đợi một chút rồi thử lại.', 'err'); return; }
+  try {
+    const model = buildModelFromGGB(ggbApi);
+    if (model.elements.length === 0) {
+      if (!silent) setStatus('Chưa có đối tượng hình học nào được nhận diện. Vẽ điểm/đoạn/đa giác/đường tròn rồi thử lại.', 'err');
+      return;
+    }
+    document.getElementById('tikzOut').value = generateTikZ(model);
+    document.getElementById('cetzOut').value = generateCetz(model);
+    document.getElementById('svgOut').value = generateSVG(model);
+    const projNote = model.is3D ? ' (đã áp dụng phép chiếu song song 3D→2D: trục sâu chéo 45°, tỉ lệ 1/2)' : '';
+    const autoNote = silent ? ' (tự động cập nhật theo vị trí điểm)' : '';
+    if (model.skippedNames && model.skippedNames.length > 0) {
+      setStatus(`Đã sinh code từ ${model.elements.length} đối tượng${projNote}${autoNote}. Bỏ qua ${model.skippedNames.length} object lỗi: ${model.skippedNames.join(', ')} (xem chi tiết ở Console - F12).`, 'err');
+    } else {
+      setStatus(`Đã sinh code từ ${model.elements.length} đối tượng${projNote}${autoNote}.`, 'ok');
+    }
+    // SVG render lại tức thì (rẻ, không cần biên dịch)
+    document.getElementById('svgPreview').innerHTML = document.getElementById('svgOut').value;
+    // TikZJax/typst.ts biên dịch nặng hơn — bỏ qua khi đang tự động cập nhật liên tục lúc kéo điểm
+    if (!skipHeavyPreview) {
+      renderTikzPreview(document.getElementById('tikzOut').value);
+      renderCetzPreview(document.getElementById('cetzOut').value);
+    }
+  } catch (e) {
+    if (!silent) setStatus('Lỗi khi đọc construction: ' + e.message, 'err');
+  }
+}
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+  regenerateCode({ silent: false, skipHeavyPreview: false });
+});
+
+document.getElementById('autoUpdateToggle').addEventListener('change', (e) => {
+  autoUpdateEnabled = e.target.checked;
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (ggbApi) ggbApi.newConstruction();
+  document.getElementById('tikzOut').value = '';
+  document.getElementById('cetzOut').value = '';
+  setStatus('Đã xoá hình vẽ.', '');
+});
+
+document.getElementById('openPrismBtn').addEventListener('click', () => {
+  const tikzCode = document.getElementById('tikzOut').value;
+  if (!tikzCode) { setStatus('Chưa có code TikZ — bấm "Sinh code" trước.', 'err'); return; }
+  const fullDoc = [
+    '\\documentclass[12pt]{article}',
+    '\\usepackage{tikz}',
+    '\\usetikzlibrary{arrows,arrows.meta}',
+    '\\usepackage[margin=1in]{geometry}',
+    '',
+    '\\begin{document}',
+    '',
+    '\\begin{center}',
+    tikzCode,
+    '\\end{center}',
+    '',
+    '\\end{document}',
+  ].join('\n');
+
+  navigator.clipboard.writeText(fullDoc).then(() => {
+    setStatus('Đã sao chép code LaTeX đầy đủ vào clipboard — đang mở Prism, dán vào main.tex.', 'ok');
+    window.open('https://prism.openai.com/', '_blank');
+  }).catch(() => {
+    setStatus('Không sao chép được tự động — mở Prism và dán code TikZ ở khung bên trái.', 'err');
+    window.open('https://prism.openai.com/', '_blank');
+  });
+});
+
+document.getElementById('openOverleafBtn').addEventListener('click', () => {
+  const tikzCode = document.getElementById('tikzOut').value;
+  if (!tikzCode) { setStatus('Chưa có code TikZ — bấm "Sinh code" trước.', 'err'); return; }
+  const fullDoc = [
+    '\\documentclass[12pt]{article}',
+    '\\usepackage{tikz}',
+    '\\usetikzlibrary{arrows,arrows.meta}',
+    '\\usepackage[margin=1in]{geometry}',
+    '',
+    '\\begin{document}',
+    '',
+    '\\begin{center}',
+    tikzCode,
+    '\\end{center}',
+    '',
+    '\\end{document}',
+  ].join('\n');
+  navigator.clipboard.writeText(fullDoc).then(() => {
+    setStatus('Đã sao chép code LaTeX đầy đủ — đang mở Overleaf, tạo project mới rồi dán vào main.tex.', 'ok');
+  }).catch(() => {
+    setStatus('Không sao chép được tự động — mở Overleaf và dán code TikZ thủ công.', 'err');
+  });
+  window.open('https://www.overleaf.com/project', '_blank');
+});
+
+document.getElementById('openTypstAppBtn').addEventListener('click', () => {
+  const cetzCode = document.getElementById('cetzOut').value;
+  if (!cetzCode) { setStatus('Chưa có code CeTZ — bấm "Sinh code" trước.', 'err'); return; }
+  navigator.clipboard.writeText(cetzCode).then(() => {
+    setStatus('Đã sao chép code CeTZ — đang mở Typst App, tạo project mới rồi dán vào.', 'ok');
+  }).catch(() => {
+    setStatus('Không sao chép được tự động — mở Typst App và dán code CeTZ thủ công.', 'err');
+  });
+  window.open('https://typst.app/', '_blank');
+});
+
+document.getElementById('openSvgomgBtn').addEventListener('click', () => {
+  const svgCode = document.getElementById('svgOut').value;
+  if (!svgCode) { setStatus('Chưa có code SVG — bấm "Sinh code" trước.', 'err'); return; }
+  navigator.clipboard.writeText(svgCode).then(() => {
+    setStatus('Đã sao chép code SVG — đang mở SVGOMG, dán vào (kéo-thả hoặc Ctrl+V) để xem/tối ưu/tải ảnh.', 'ok');
+  }).catch(() => {
+    setStatus('Không sao chép được tự động — mở SVGOMG và dán code SVG thủ công.', 'err');
+  });
+  window.open('https://jakearchibald.github.io/svgomg/', '_blank');
+});
+
+document.querySelectorAll('[data-copy]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const ta = document.getElementById(btn.getAttribute('data-copy'));
+    if (!ta.value) { setStatus('Chưa có code để sao chép.', 'err'); return; }
+    navigator.clipboard.writeText(ta.value).then(() => setStatus('Đã sao chép.', 'ok'))
+      .catch(() => { ta.select(); document.execCommand('copy'); setStatus('Đã sao chép (dự phòng).', 'ok'); });
+  });
+});
+
+document.querySelectorAll('[data-download]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const ta = document.getElementById(btn.getAttribute('data-download'));
+    if (!ta.value) { setStatus('Chưa có code để tải.', 'err'); return; }
+    const ext = btn.getAttribute('data-ext');
+    const blob = new Blob([ta.value], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `hinh-ve.${ext}`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+});
+</script>
+</body>
+</html>
