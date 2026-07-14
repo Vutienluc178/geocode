@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoGebra Vũ Tiến Lực</title>
+<title>GeoGebra trực tiếp → TikZ / CeTZ</title>
 <link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
 <script src="https://tikzjax.com/v1/tikzjax.js"></script>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@myriaddreamin/typst.ts/dist/esm/contrib/all-in-one-lite.bundle.js" id="typstLoader"></script>
@@ -62,6 +62,43 @@
     border-radius: 8px; padding: 7px 10px; font-size: 12.5px; flex: 1; min-width: 220px;
   }
   .template-row button { padding: 7px 14px; font-size: 12.5px; white-space: nowrap; }
+  .custom-view-row { gap: 6px; }
+  .custom-view-label { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+  .custom-view-axis { font-size: 12.5px; color: var(--muted); }
+  .custom-view-arrow { font-size: 12px; color: var(--muted); }
+  .custom-view-input {
+    width: 64px; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 8px; font-size: 12.5px;
+  }
+
+  .region-tools {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 12px; margin-bottom: 10px; font-size: 12.5px;
+  }
+  .region-tools > summary {
+    cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; list-style: none; user-select: none;
+  }
+  .region-tools > summary::-webkit-details-marker { display: none; }
+  .region-tools > summary::before { content: '▸ '; }
+  .region-tools[open] > summary::before { content: '▾ '; }
+  .region-tool-box { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .region-tool-box h3 { font-size: 12.5px; margin: 0 0 6px; color: var(--text); }
+  .region-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+  .region-row label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .region-input {
+    width: 130px; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 8px; font-size: 12.5px;
+  }
+  .region-input-small {
+    width: 56px; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 8px; font-size: 12.5px;
+  }
+  .region-hint { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin: 4px 0; }
+  .region-textarea {
+    width: 100%; min-height: 70px; background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 8px;
+    font-family: "SF Mono",Consolas,Monaco,monospace; font-size: 12px; margin-bottom: 6px; resize: vertical;
+  }
   .code-section > summary {
     cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600;
     padding: 6px 4px; list-style: none; user-select: none;
@@ -136,6 +173,43 @@
     <button class="btn-secondary" id="viewSquare10Btn">Vùng nhìn −10 → 10</button>
     <button class="btn-secondary" id="viewSquare5Btn">Vùng nhìn −5 → 5</button>
   </div>
+
+  <div class="template-row custom-view-row">
+    <span class="custom-view-label">Tuỳ chỉnh:</span>
+    <span class="custom-view-axis">x:</span>
+    <input type="number" id="customXMin" class="custom-view-input" value="-10" step="any">
+    <span class="custom-view-arrow">→</span>
+    <input type="number" id="customXMax" class="custom-view-input" value="10" step="any">
+    <span class="custom-view-axis">y:</span>
+    <input type="number" id="customYMin" class="custom-view-input" value="-10" step="any">
+    <span class="custom-view-arrow">→</span>
+    <input type="number" id="customYMax" class="custom-view-input" value="10" step="any">
+    <button class="btn-secondary" id="applyCustomViewBtn">Áp dụng</button>
+  </div>
+
+  <details class="region-tools">
+    <summary>Công cụ vùng miền (miền giới hạn bởi các đường · hệ bất phương trình) — bấm để mở</summary>
+
+    <div class="region-tool-box">
+      <h3>1. Miền hình phẳng giới hạn bởi các đường</h3>
+      <div class="region-row">
+        <label>Hàm f(x): <input type="text" id="regionF" placeholder="VD: x^2-1" class="region-input"></label>
+        <label>Hàm g(x) (để trống = trục Ox): <input type="text" id="regionG" placeholder="VD: x" class="region-input"></label>
+      </div>
+      <div class="region-row">
+        <label>Cận a: <input type="number" id="regionA" value="0" step="any" class="region-input-small"></label>
+        <label>Cận b: <input type="number" id="regionB" value="2" step="any" class="region-input-small"></label>
+        <button class="btn-secondary" id="drawRegionBtn">Vẽ miền →</button>
+      </div>
+    </div>
+
+    <div class="region-tool-box">
+      <h3>2. Hệ bất phương trình bậc nhất 2 ẩn (miền nghiệm)</h3>
+      <p class="region-hint">Mỗi bất phương trình 1 dòng. VD:<br>x+y&lt;=4<br>x&gt;=0<br>y&gt;=0<br>2x-y&lt;=3</p>
+      <textarea id="inequalitySystem" class="region-textarea" placeholder="x+y<=4&#10;x>=0&#10;y>=0"></textarea>
+      <button class="btn-secondary" id="drawInequalitySystemBtn">Vẽ hệ bất phương trình →</button>
+    </div>
+  </details>
 
   <div id="ggb-container"></div>
 
@@ -547,6 +621,10 @@ function buildModelFromGGB(api) {
    }
   });
 
+  // Gộp các vùng/đường do công cụ "Miền giới hạn bởi đường" và "Hệ bất phương trình" tạo ra
+  // (tự tính trong trình duyệt, độc lập với việc đọc object GeoGebra) vào model để xuất code.
+  customRegions.forEach((r) => { trackBBox(r.points); elements.push(r); });
+
   if (!isFinite(xmin)) { xmin = 0; xmax = 1; ymin = 0; ymax = 1; }
   // Sắp xếp lại thứ tự vẽ: đường/hình (cạnh, vòng tròn, cung...) vẽ TRƯỚC,
   // chấm điểm và nhãn chữ vẽ SAU — để điểm luôn nổi rõ, không bị nét đường đè lên.
@@ -679,6 +757,103 @@ function generateTikZ(model) {
     ...body.map((l) => '  ' + l),
     '\\end{tikzpicture}',
   ].join('\n');
+}
+
+// ===================== Công cụ vùng miền: miền giới hạn bởi 2 đường + hệ bất phương trình =====================
+// Các vùng/đường do 2 công cụ này tạo ra được lưu riêng ở đây, rồi gộp vào model khi sinh code —
+// không phụ thuộc đọc lại object phức tạp (Integral/Inequality) từ GeoGebra, vốn khó đọc chính xác qua API.
+let customRegions = [];
+
+// Chuyển biểu thức toán kiểu "2x+3y" thành JS hợp lệ "2*x+3*y" để eval được
+function toJsMath(expr) {
+  return expr
+    .replace(/\s+/g, '')
+    .replace(/(\d)(x|y)/gi, '$1*$2')
+    .replace(/\)(x|y)/gi, ')*$1')
+    .replace(/(x|y)\(/gi, '$1*(')
+    .replace(/\^/g, '**');
+}
+
+function evalMathExpr(jsExpr, x, y) {
+  // eslint-disable-next-line no-new-func
+  const fn = new Function('x', 'y', `return (${jsExpr});`);
+  return fn(x, y);
+}
+
+// Parse 1 bất phương trình tuyến tính bậc nhất 2 ẩn, VD "2x+3y<=6", "y>=x-1", "x<0"
+// Trả về hệ số chuẩn hoá dạng A*x + B*y + K <= 0 (dùng phép sai phân số để suy A,B,K, không cần parser ký hiệu)
+function parseLinearInequality(line) {
+  const m = line.match(/(<=|>=|<|>)/);
+  if (!m) return null;
+  const op = m[1];
+  const idx = line.indexOf(op);
+  const lhsRaw = line.slice(0, idx).trim();
+  const rhsRaw = line.slice(idx + op.length).trim();
+  if (!lhsRaw || !rhsRaw) return null;
+  try {
+    const lhsJs = toJsMath(lhsRaw);
+    const rhsJs = toJsMath(rhsRaw);
+    const diff = (x, y) => evalMathExpr(lhsJs, x, y) - evalMathExpr(rhsJs, x, y);
+    const K0 = diff(0, 0);
+    const A0 = diff(1, 0) - K0;
+    const B0 = diff(0, 1) - K0;
+    if (!isFinite(K0) || !isFinite(A0) || !isFinite(B0)) return null;
+    // "lhs op rhs" <=> "A0*x+B0*y+K0 op 0"; chuẩn hoá về dạng "<= 0"
+    let A = A0, B = B0, K = K0;
+    if (op === '>=' || op === '>') { A = -A0; B = -B0; K = -K0; }
+    const strict = op === '<' || op === '>';
+    return { A, B, K, strict, raw: line };
+  } catch (e) {
+    return null;
+  }
+}
+
+// Cắt đa giác subjectPolygon, chỉ giữ phần thoả A*x+B*y+K <= 0 (thuật toán Sutherland–Hodgman)
+function clipPolygonByHalfPlane(subjectPolygon, A, B, K) {
+  if (subjectPolygon.length === 0) return [];
+  const eps = 1e-9;
+  const inside = (p) => A * p[0] + B * p[1] + K <= eps;
+  const intersect = (p1, p2) => {
+    const d1 = A * p1[0] + B * p1[1] + K;
+    const d2 = A * p2[0] + B * p2[1] + K;
+    const t = d1 / (d1 - d2);
+    return [p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])];
+  };
+  const output = [];
+  for (let i = 0; i < subjectPolygon.length; i++) {
+    const curr = subjectPolygon[i];
+    const prev = subjectPolygon[(i - 1 + subjectPolygon.length) % subjectPolygon.length];
+    const currIn = inside(curr), prevIn = inside(prev);
+    if (currIn) {
+      if (!prevIn) output.push(intersect(prev, curr));
+      output.push(curr);
+    } else if (prevIn) {
+      output.push(intersect(prev, curr));
+    }
+  }
+  return output;
+}
+
+// Lấy 2 điểm giao của đường thẳng A*x+B*y+K=0 với khung hình vuông [-bound,bound] để vẽ đường biên
+function lineBoxSegment(A, B, K, bound) {
+  const pts = [];
+  const edges = [
+    [[-bound, -bound], [bound, -bound]],
+    [[bound, -bound], [bound, bound]],
+    [[bound, bound], [-bound, bound]],
+    [[-bound, bound], [-bound, -bound]],
+  ];
+  edges.forEach(([p1, p2]) => {
+    const d1 = A * p1[0] + B * p1[1] + K;
+    const d2 = A * p2[0] + B * p2[1] + K;
+    if ((d1 <= 0 && d2 >= 0) || (d1 >= 0 && d2 <= 0)) {
+      if (Math.abs(d1 - d2) < 1e-12) return;
+      const t = d1 / (d1 - d2);
+      pts.push([p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])]);
+    }
+  });
+  if (pts.length < 2) return null;
+  return [pts[0], pts[1]];
 }
 
 const statusEl = document.getElementById('status');
@@ -839,6 +1014,10 @@ function setSquareView(bound) {
   if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
   try {
     ggbApi.setCoordSystem(-bound, bound, -bound, bound);
+    document.getElementById('customXMin').value = -bound;
+    document.getElementById('customXMax').value = bound;
+    document.getElementById('customYMin').value = -bound;
+    document.getElementById('customYMax').value = bound;
     setStatus(`Đã đặt vùng nhìn hình vuông toạ độ từ −${bound} đến ${bound}.`, 'ok');
   } catch (err) {
     setStatus('Lỗi khi đặt vùng nhìn: ' + err.message, 'err');
@@ -847,8 +1026,121 @@ function setSquareView(bound) {
 document.getElementById('viewSquare10Btn').addEventListener('click', () => setSquareView(10));
 document.getElementById('viewSquare5Btn').addEventListener('click', () => setSquareView(5));
 
+document.getElementById('applyCustomViewBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const xMin = parseFloat(document.getElementById('customXMin').value);
+  const xMax = parseFloat(document.getElementById('customXMax').value);
+  const yMin = parseFloat(document.getElementById('customYMin').value);
+  const yMax = parseFloat(document.getElementById('customYMax').value);
+  if (![xMin, xMax, yMin, yMax].every((v) => isFinite(v)) || xMin >= xMax || yMin >= yMax) {
+    setStatus('Vùng nhìn không hợp lệ — giá trị "đến" phải lớn hơn giá trị "từ".', 'err');
+    return;
+  }
+  try {
+    ggbApi.setCoordSystem(xMin, xMax, yMin, yMax);
+    setStatus(`Đã đặt vùng nhìn tuỳ chỉnh: x ∈ [${xMin}, ${xMax}], y ∈ [${yMin}, ${yMax}].`, 'ok');
+  } catch (err) {
+    setStatus('Lỗi khi đặt vùng nhìn: ' + err.message, 'err');
+  }
+});
+
+document.getElementById('drawRegionBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const fExpr = document.getElementById('regionF').value.trim();
+  const gExprRaw = document.getElementById('regionG').value.trim();
+  const gExpr = gExprRaw || '0';
+  const a = parseFloat(document.getElementById('regionA').value);
+  const b = parseFloat(document.getElementById('regionB').value);
+  if (!fExpr) { setStatus('Thầy cần nhập hàm f(x).', 'err'); return; }
+  if (!isFinite(a) || !isFinite(b) || a >= b) { setStatus('Cận a phải nhỏ hơn cận b.', 'err'); return; }
+
+  try {
+    ggbApi.evalCommand(`ggbRegionF(x)=${fExpr}`);
+    ggbApi.evalCommand(`ggbRegionG(x)=${gExpr}`);
+    ggbApi.evalCommand(`Integral(ggbRegionF, ggbRegionG, ${a}, ${b})`);
+  } catch (e) {
+    setStatus('Lỗi khi vẽ miền trong GeoGebra: ' + e.message, 'err');
+    return;
+  }
+
+  // Lấy mẫu f, g độc lập để dựng đa giác vùng tô cho việc xuất code (không đọc lại object Integral từ GeoGebra)
+  const steps = 40;
+  const fwd = [], bwd = [];
+  let sampleFail = false;
+  for (let i = 0; i <= steps; i++) {
+    const x = a + ((b - a) * i) / steps;
+    try {
+      const yf = parseFloat(ggbApi.evalCommandCAS(`y=ggbRegionF(${x})`));
+      const yg = parseFloat(ggbApi.evalCommandCAS(`y=ggbRegionG(${x})`));
+      if (isFinite(yf) && isFinite(yg)) { fwd.push([x, yf]); bwd.unshift([x, yg]); }
+      else sampleFail = true;
+    } catch (e) { sampleFail = true; }
+  }
+  const regionPoints = [...fwd, ...bwd];
+  if (regionPoints.length >= 3) {
+    customRegions.push({
+      type: 'path', points: regionPoints, closed: true,
+      style: { stroke: [0.1, 0.3, 0.8], fill: [0.3, 0.55, 0.95], fillAlpha: 0.35, width: null, dash: null },
+    });
+    setStatus(`Đã vẽ miền giới hạn bởi f(x)=${fExpr} và g(x)=${gExpr} trên [${a}, ${b}]${sampleFail ? ' (một vài điểm mẫu bị lỗi, hình có thể không mượt)' : ''}. Bấm "Sinh code" để xuất.`, 'ok');
+  } else {
+    setStatus('Không lấy mẫu được điểm nào hợp lệ — kiểm tra lại biểu thức hàm số.', 'err');
+  }
+});
+
+document.getElementById('drawInequalitySystemBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const lines = document.getElementById('inequalitySystem').value
+    .split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+  if (lines.length === 0) { setStatus('Thầy cần nhập ít nhất 1 bất phương trình.', 'err'); return; }
+
+  const parsed = [];
+  const failedLines = [];
+  lines.forEach((line) => {
+    const p = parseLinearInequality(line);
+    if (p) parsed.push(p); else failedLines.push(line);
+  });
+  if (parsed.length === 0) {
+    setStatus('Không đọc được bất phương trình nào — kiểm tra lại cú pháp (VD: x+y<=4).', 'err');
+    return;
+  }
+
+  // Vẽ từng bất phương trình thật trong GeoGebra (để Thầy thấy từng miền riêng lẻ tô chồng lên nhau)
+  lines.forEach((line) => {
+    try { ggbApi.evalCommand(line); } catch (e) {}
+  });
+
+  // Tự tính miền nghiệm (giao các nửa mặt phẳng) bằng thuật toán cắt đa giác, độc lập với GeoGebra
+  const BOUND = 30; // khung cắt lớn để xấp xỉ miền không bị chặn
+  let poly = [[-BOUND, -BOUND], [BOUND, -BOUND], [BOUND, BOUND], [-BOUND, BOUND]];
+  parsed.forEach((ineq) => { poly = clipPolygonByHalfPlane(poly, ineq.A, ineq.B, ineq.K); });
+
+  // Vẽ các đường biên (nét đứt nếu bất phương trình nghiêm ngặt <, >)
+  parsed.forEach((ineq) => {
+    const seg = lineBoxSegment(ineq.A, ineq.B, ineq.K, BOUND);
+    if (seg) {
+      customRegions.push({
+        type: 'path', points: seg, closed: false,
+        style: { stroke: [0.2, 0.2, 0.2], fill: null, fillAlpha: null, width: null, dash: ineq.strict ? 'dashed' : null },
+      });
+    }
+  });
+
+  if (poly.length >= 3) {
+    customRegions.push({
+      type: 'path', points: poly, closed: true,
+      style: { stroke: [0.85, 0.2, 0.2], fill: [0.9, 0.4, 0.3], fillAlpha: 0.35, width: null, dash: null },
+    });
+    const failNote = failedLines.length > 0 ? ` (bỏ qua ${failedLines.length} dòng không đọc được: ${failedLines.join(' | ')})` : '';
+    setStatus(`Đã tính miền nghiệm từ ${parsed.length} bất phương trình${failNote}. Bấm "Sinh code" để xuất.`, 'ok');
+  } else {
+    setStatus('Hệ bất phương trình vô nghiệm (không có miền chung) trong phạm vi xét, hoặc miền quá nhỏ.', 'err');
+  }
+});
 
 document.getElementById('typstLoader').addEventListener('load', () => {
+
+
   try {
     $typst.setCompilerInitOptions({
       getModule: () => 'https://cdn.jsdelivr.net/npm/@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm',
