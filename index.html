@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoGebra Vũ Tiến Lực</title>
+<title>GeoGebra trực tiếp → TikZ / CeTZ</title>
 <link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
 <script src="https://tikzjax.com/v1/tikzjax.js"></script>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@myriaddreamin/typst.ts/dist/esm/contrib/all-in-one-lite.bundle.js" id="typstLoader"></script>
@@ -316,7 +316,7 @@
   </div>
 
   <h1>GeoGebra trực tiếp → TikZ / CeTZ</h1>
-  <div class="subtitle">Vẽ hình trực tiếp trong GeoGebra bên dưới, bấm "Sinh code" để lấy ngay code TikZ và CeTZ (Typst) — không cần bước xuất/dán thủ công.</div>
+  <div class="subtitle">Hướng dẫn sử dụng: Vẽ hình trong Geo rồi sinh code, lấy ảnh PNG trong suốt tải về hoặc copy vào Word/PPT nhanh nhất.</div>
 
   <button class="tools-toggle-btn" id="toolsToggleBtn">🛠️ Công cụ vẽ hình <span class="tools-toggle-hint">(mẫu hình · vùng miền · Ven · hàm số · 3D · đề bài...)</span></button>
 
@@ -695,7 +695,7 @@
     </div>
   </details>
 
-  <div class="footer-note">Applet GeoGebra tải từ geogebra.org, preview TikZ dùng TikZJax (tikzjax.com), preview CeTZ dùng typst.ts (jsdelivr) — cả 3 đều cần kết nối mạng và tự tải WASM lần đầu (có thể mất vài giây). Ảnh PNG xuất trực tiếp từ chính GeoGebra (không qua bước dựng lại) nên luôn khớp chính xác hình đang vẽ. Việc sinh code chạy hoàn toàn trong trình duyệt, không gửi hình vẽ đi máy chủ nào khác. Nút "Mở trong Prism" chỉ copy code + mở tab mới do Prism chưa có API công khai để tự động chèn nội dung — Thầy cần dán thủ công vào main.tex.</div>
+
 </div>
 
 <script src="https://www.geogebra.org/apps/deployggb.js"></script>
@@ -2503,6 +2503,7 @@ const ggb = new GGBApplet({
       heavyPreviewTimer = setTimeout(() => {
         renderTikzPreview(document.getElementById('tikzOut').value);
         renderCetzPreview(document.getElementById('cetzOut').value);
+        exportPngFromGeoGebra(true);
       }, 700);
     };
 
