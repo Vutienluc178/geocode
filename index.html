@@ -7,6 +7,18 @@
 <link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
 <script src="https://tikzjax.com/v1/tikzjax.js"></script>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@myriaddreamin/typst.ts/dist/esm/contrib/all-in-one-lite.bundle.js" id="typstLoader"></script>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    },
+    svg: { fontCache: 'global' },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="mathjaxScript" async></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
   :root {
     --bg: #0f1220; --panel: #1a1e33; --panel2: #222746;
@@ -78,6 +90,93 @@
   .guide code { background: #0006; padding: 1px 6px; border-radius: 4px; color: var(--accent2); }
 
   #ggb-container { width: 100%; height: 680px; background: #fff; border-radius: 12px; overflow: hidden; }
+
+  .main-display-row {
+    display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px;
+  }
+  .main-display-row .question-panel { flex: 1 1 auto; margin-bottom: 0; }
+  .main-display-row .ggb-wrapper { flex: 1 1 auto; }
+
+  .question-panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 14px;
+  }
+  .question-panel-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .question-panel-header h2 { font-size: 14px; margin: 0; color: var(--text); }
+  .question-import-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .question-controls {
+    display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--muted);
+  }
+  .question-controls select {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 8px; font-size: 12.5px;
+  }
+  .question-display {
+    background: #fff; color: #111; border-radius: 10px; padding: 20px 24px;
+    font-size: 22px; font-weight: 700; line-height: 1.7; min-height: 70px;
+    max-height: 320px; overflow-y: auto;
+  }
+  .question-display .ph { color: #8a8a8a; font-size: 14px; font-weight: 400; line-height: 1.6; }
+  .question-item { padding: 12px 0; border-bottom: 1px solid #e5e5e5; }
+  .question-item:last-child { border-bottom: none; }
+  .question-item-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .question-number { font-weight: 800; color: #1a5fb4; white-space: nowrap; }
+  .question-item-extra { margin-top: 6px; font-size: 16px; font-weight: 600; color: #444; padding-left: 4px; }
+  /* Công thức toán (MathJax) hiển thị màu đỏ, in đậm để nổi bật kiểu trình chiếu */
+  .question-display mjx-container { color: #d1273d !important; font-weight: 700; }
+  .question-extra-table { margin-top: 10px; font-size: 13px; }
+  .question-extra-table table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
+  .question-extra-table th, .question-extra-table td {
+    border: 1px solid #ddd; padding: 6px 10px; text-align: left; color: #222;
+  }
+  .question-extra-table th { background: #f0f0f0; font-weight: 600; white-space: nowrap; }
+
+  .tools-toggle-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #0a0c16; border: none; border-radius: 10px;
+    padding: 12px 18px; font-size: 14px; font-weight: 700; cursor: pointer;
+    margin-bottom: 16px; width: 100%; justify-content: center;
+    box-shadow: 0 4px 14px rgba(110,231,183,0.15);
+    transition: transform 0.1s ease;
+  }
+  .tools-toggle-btn:hover { transform: translateY(-1px); }
+  .tools-toggle-btn:active { transform: translateY(0); }
+  .tools-toggle-hint { font-weight: 400; font-size: 12px; opacity: 0.75; }
+
+  .tools-drawer-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 998; backdrop-filter: blur(2px);
+  }
+  .tools-drawer-backdrop.open { display: block; }
+
+  .tools-drawer {
+    position: fixed; top: 0; left: 0; height: 100vh; width: min(480px, 92vw);
+    background: #0e1120; border-right: 1px solid var(--border);
+    z-index: 999; transform: translateX(-100%); transition: transform 0.25s ease;
+    display: flex; flex-direction: column; box-shadow: 8px 0 30px rgba(0,0,0,0.4);
+  }
+  .tools-drawer.open { transform: translateX(0); }
+  .tools-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .tools-drawer-header h2 {
+    font-size: 15px; margin: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tools-drawer-close {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; font-size: 12.5px; cursor: pointer;
+  }
+  .tools-drawer-close:hover { border-color: var(--accent2); }
+  .tools-drawer-body {
+    overflow-y: auto; padding: 14px 18px 30px; flex: 1;
+  }
+  .tools-drawer-body .region-tools,
+  .tools-drawer-body .guide { margin-bottom: 10px; }
 
   .ggb-wrapper { position: relative; }
   .fullscreen-btn-row { display: flex; justify-content: flex-end; margin-top: 8px; }
@@ -219,6 +318,16 @@
   <h1>GeoGebra trực tiếp → TikZ / CeTZ</h1>
   <div class="subtitle">Vẽ hình trực tiếp trong GeoGebra bên dưới, bấm "Sinh code" để lấy ngay code TikZ và CeTZ (Typst) — không cần bước xuất/dán thủ công.</div>
 
+  <button class="tools-toggle-btn" id="toolsToggleBtn">🛠️ Công cụ vẽ hình <span class="tools-toggle-hint">(mẫu hình · vùng miền · Ven · hàm số · 3D · đề bài...)</span></button>
+
+  <div class="tools-drawer-backdrop" id="toolsBackdrop"></div>
+  <div class="tools-drawer" id="toolsDrawer">
+    <div class="tools-drawer-header">
+      <h2>🛠️ Công cụ vẽ hình</h2>
+      <button class="tools-drawer-close" id="toolsCloseBtn">✕ Đóng</button>
+    </div>
+    <div class="tools-drawer-body">
+
   <details class="guide">
     <summary>Hướng dẫn dùng & danh sách hỗ trợ (bấm để xem)</summary>
     <b>Cách dùng:</b> Dùng công cụ trên thanh toolbar của GeoGebra để vẽ điểm, đoạn thẳng, đa giác, đường tròn, góc, vector, hàm số, văn bản... như bình thường. Khi vẽ xong, bấm nút <b>"Sinh code"</b> bên dưới — công cụ sẽ tự đọc toàn bộ hình đang có (qua GeoGebra API) và sinh code tương ứng.
@@ -238,6 +347,7 @@
     </label>
     <button class="btn-secondary" id="viewSquare10Btn">Vùng nhìn −10 → 10</button>
     <button class="btn-secondary" id="viewSquare5Btn">Vùng nhìn −5 → 5</button>
+    <button class="btn-secondary" id="fixRatioBtn">Sửa tỉ lệ 1:1</button>
   </div>
 
   <div class="template-row custom-view-row">
@@ -382,7 +492,17 @@
   <details class="region-tools">
     <summary>Công cụ khảo sát hàm số (tiếp tuyến · đồng biến/nghịch biến · cực trị) — bấm để mở</summary>
     <div class="region-tool-box">
-      <h3>1. Vẽ tiếp tuyến tại 1 điểm</h3>
+      <h3>1. Nhập hàm số nhanh (vẽ đồ thị trực tiếp)</h3>
+      <div class="region-row">
+        <label>Tên hàm: <input type="text" id="quickFuncName" class="region-input-small" value="f"></label>
+        <label>(x) = <input type="text" id="quickFuncExpr" class="region-input" style="width:220px;" placeholder="VD: x^2-3x+1, sin(x), sqrt(x), 1/x..."></label>
+        <button class="btn-secondary" id="drawQuickFuncBtn">Vẽ đồ thị →</button>
+        <button class="btn-secondary" id="clearQuickFuncBtn">Xoá hàm này</button>
+      </div>
+      <p class="region-hint">Vì Dạng đại số đang ẩn mặc định, dùng ô này để gõ hàm số nhanh thay vì phải bật lại thanh nhập của GeoGebra. Có thể đặt nhiều tên khác nhau (f, g, h...) để vẽ nhiều hàm cùng lúc, mỗi hàm 1 màu do GeoGebra tự chọn.</p>
+    </div>
+    <div class="region-tool-box">
+      <h3>2. Vẽ tiếp tuyến tại 1 điểm</h3>
       <div class="region-row">
         <label>Hàm f(x): <input type="text" id="tangentF" class="region-input" placeholder="VD: x^2-3x+1"></label>
         <label>x0: <input type="number" id="tangentX0" class="region-input-small" step="any" value="1"></label>
@@ -390,7 +510,7 @@
       </div>
     </div>
     <div class="region-tool-box">
-      <h3>2. Tô màu đồng biến/nghịch biến + đánh dấu cực trị</h3>
+      <h3>3. Tô màu đồng biến/nghịch biến + đánh dấu cực trị</h3>
       <div class="region-row">
         <label>Hàm f(x): <input type="text" id="monoF" class="region-input" placeholder="VD: x^3-3x"></label>
         <label>Từ: <input type="number" id="monoA" class="region-input-small" step="any" value="-3"></label>
@@ -399,13 +519,56 @@
       </div>
       <p class="region-hint">Xanh dương = đồng biến, đỏ = nghịch biến. Cực trị (CĐ/CT) tự phát hiện theo điểm đổi dấu đạo hàm (ước lượng bằng sai phân số, đã kiểm chứng đúng với hàm bậc 3).</p>
     </div>
+    <div class="region-tool-box">
+      <h3>4. Hàm phân thức + tiệm cận tự động</h3>
+      <div class="region-row">
+        <label>Dạng hàm:
+          <select id="asymType" class="region-input-small" style="width:150px;">
+            <option value="11">Bậc 1 / Bậc 1</option>
+            <option value="21">Bậc 2 / Bậc 1</option>
+          </select>
+        </label>
+      </div>
+      <div class="region-row" id="asym11Row">
+        <span>f(x) = (a·x + b) / (c·x + d)</span>
+        <label>a: <input type="number" id="asymA" class="region-input-small" value="1" step="any"></label>
+        <label>b: <input type="number" id="asymB" class="region-input-small" value="1" step="any"></label>
+        <label>c: <input type="number" id="asymC" class="region-input-small" value="1" step="any"></label>
+        <label>d: <input type="number" id="asymD" class="region-input-small" value="-2" step="any"></label>
+      </div>
+      <div class="region-row" id="asym21Row" style="display:none;">
+        <span>f(x) = (a·x² + b·x + c) / (d·x + e)</span>
+        <label>a: <input type="number" id="asymA2" class="region-input-small" value="1" step="any"></label>
+        <label>b: <input type="number" id="asymB2" class="region-input-small" value="0" step="any"></label>
+        <label>c: <input type="number" id="asymC2" class="region-input-small" value="1" step="any"></label>
+        <label>d: <input type="number" id="asymD2" class="region-input-small" value="1" step="any"></label>
+        <label>e: <input type="number" id="asymE2" class="region-input-small" value="0" step="any"></label>
+      </div>
+      <div class="region-row">
+        <button class="btn-secondary" id="drawAsymptoteBtn">Vẽ đồ thị + tiệm cận →</button>
+      </div>
+      <p class="region-hint">Bậc 1/Bậc 1: tự vẽ tiệm cận đứng (x = −d/c) và tiệm cận ngang (y = a/c). Bậc 2/Bậc 1: tự vẽ tiệm cận đứng (x = −e/d) và tiệm cận xiên (chia đa thức, y = px+q) — đã kiểm chứng công thức bằng số liệu cụ thể.</p>
+    </div>
   </details>
 
   <details class="region-tools">
     <summary>Công cụ 3D mở rộng (bật/tắt 3D · nét khuất · tuỳ chỉnh phép chiếu) — bấm để mở</summary>
 
     <div class="region-tool-box">
-      <h3>1. Bật/tắt chế độ Không gian 3D</h3>
+      <h3>1. Khối tròn xoay quanh Ox</h3>
+      <div class="region-row">
+        <label>Hàm f(x): <input type="text" id="revolutionF" class="region-input" placeholder="VD: x, sqrt(x), sin(x)+2"></label>
+      </div>
+      <div class="region-row">
+        <label>Cận a: <input type="number" id="revolutionA" class="region-input-small" value="0" step="any"></label>
+        <label>Cận b: <input type="number" id="revolutionB" class="region-input-small" value="2" step="any"></label>
+        <button class="btn-secondary" id="drawRevolutionBtn">Tạo khối tròn xoay →</button>
+      </div>
+      <p class="region-hint">Tạo mặt tròn xoay khi cho miền giới hạn bởi y=f(x), trục Ox, x=a, x=b quay quanh Ox — tự chuyển sang 3D và tự tính thể tích V = π∫f(x)²dx (Simpson, đã kiểm chứng đúng với hình nón mẫu). <b>Lưu ý:</b> đây là mặt cong 3D thật (giống nón/trụ/cầu) nên <b>chưa xuất được code TikZ/CeTZ</b>, chỉ xem trực quan trong GeoGebra.</p>
+    </div>
+
+    <div class="region-tool-box">
+      <h3>2. Bật/tắt chế độ Không gian 3D</h3>
       <div class="region-row">
         <button class="btn-secondary" id="enable3DBtn">Bật 3D</button>
         <button class="btn-secondary" id="disable3DBtn">Tắt 3D (về 2D)</button>
@@ -413,7 +576,7 @@
     </div>
 
     <div class="region-tool-box">
-      <h3>2. Đánh dấu cạnh khuất (nét đứt khi xuất code)</h3>
+      <h3>3. Đánh dấu cạnh khuất (nét đứt khi xuất code)</h3>
       <div class="region-row">
         <label>Điểm 1: <input type="text" id="hiddenEdgeP1" class="region-input-small" placeholder="D"></label>
         <label>Điểm 2: <input type="text" id="hiddenEdgeP2" class="region-input-small" placeholder="D'"></label>
@@ -425,7 +588,7 @@
     </div>
 
     <div class="region-tool-box">
-      <h3>3. Tuỳ chỉnh phép chiếu song song (mặc định: góc 45°, tỉ lệ 1/2)</h3>
+      <h3>4. Tuỳ chỉnh phép chiếu song song (mặc định: góc 45°, tỉ lệ 1/2)</h3>
       <div class="region-row">
         <label>Góc trục sâu: <input type="number" id="projAngle" class="region-input-small" value="45" step="1">°</label>
         <label>Tỉ lệ trục sâu: <input type="number" id="projScale" class="region-input-small" value="0.5" step="0.05"></label>
@@ -435,8 +598,38 @@
     </div>
   </details>
 
-  <div class="ggb-wrapper">
-    <div id="ggb-container"></div>
+
+    </div>
+  </div>
+
+  <div class="main-display-row">
+    <div class="question-panel">
+      <div class="question-panel-header">
+        <h2>📋 Đề bài</h2>
+        <div class="question-import-row">
+          <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+          <button class="btn-secondary" id="excelUploadBtn">Tải file Excel/CSV</button>
+          <input type="text" id="gsheetLinkInput" class="region-input" style="width:280px;" placeholder="Dán link Google Sheet (đã chia sẻ 'Bất kỳ ai có link')">
+          <button class="btn-secondary" id="gsheetLoadBtn">Tải từ Google Sheet</button>
+        </div>
+      </div>
+      <div class="question-controls" id="questionControls" style="display:none;">
+        <label>Cột câu hỏi: <select id="questionColumnSelect"></select></label>
+        <button class="btn-secondary" id="prevQuestionBtn">← Câu trước</button>
+        <span id="questionIndexLabel">Câu 1/1</span>
+        <button class="btn-secondary" id="nextQuestionBtn">Câu sau →</button>
+        <label>Đi tới câu số: <input type="number" id="jumpQuestionInput" class="region-input-small" min="1" value="1"></label>
+        <button class="btn-secondary" id="jumpQuestionBtn">Đi tới →</button>
+      </div>
+      <div class="question-display" id="questionDisplay">
+        <span class="ph">Chưa có đề bài — tải file Excel/CSV hoặc dán link Google Sheet ở trên. Công thức toán viết trong dấu $...$ (VD: $x^2+2x-1=0$) sẽ tự hiển thị đẹp, màu đỏ.</span>
+      </div>
+      <div class="question-extra-table" id="questionExtraTable"></div>
+    </div>
+
+    <div class="ggb-wrapper">
+      <div id="ggb-container"></div>
+    </div>
   </div>
   <div class="fullscreen-btn-row">
     <button class="btn-secondary" id="fullscreenBtn" title="Toàn màn hình">⛶ Toàn màn hình</button>
@@ -1186,6 +1379,153 @@ function setStatus(msg, type) {
   statusEl.className = 'status' + (type ? ' ' + type : '');
 }
 
+// ===================== Đề bài (Excel / Google Sheet + MathJax) =====================
+let questionRows = [];
+let questionColumns = [];
+let currentQuestionIndex = 0;
+
+function escapeHtmlKeepMath(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML.replace(/\n/g, '<br>');
+}
+
+function renderCurrentQuestion() {
+  if (questionRows.length === 0) return;
+  const row = questionRows[currentQuestionIndex];
+  const col = document.getElementById('questionColumnSelect').value;
+  const box = document.getElementById('questionDisplay');
+  const otherCols = questionColumns.filter((c) => c !== col);
+
+  const text = escapeHtmlKeepMath(String(row[col] ?? ''));
+  let extra = '';
+  if (otherCols.length > 0) {
+    extra = '<div class="question-item-extra">' + otherCols.map((c) => `<span class="qe-cell"><b>${escapeHtmlKeepMath(c)}:</b> ${escapeHtmlKeepMath(String(row[c] ?? ''))}</span>`).join(' &nbsp;·&nbsp; ') + '</div>';
+  }
+  box.innerHTML = `<div class="question-item"><div class="question-item-head"><span class="question-number">Câu ${currentQuestionIndex + 1}.</span> ${text}</div>${extra}</div>`;
+
+  document.getElementById('questionIndexLabel').textContent = `Câu ${currentQuestionIndex + 1}/${questionRows.length}`;
+  document.getElementById('questionExtraTable').innerHTML = '';
+  document.getElementById('jumpQuestionInput').value = currentQuestionIndex + 1;
+
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    MathJax.typesetPromise([box]).catch((e) => console.warn('[MathJax]', e));
+  }
+}
+
+function goToQuestion(n) {
+  if (n < 1 || n > questionRows.length) return;
+  currentQuestionIndex = n - 1;
+  renderCurrentQuestion();
+}
+
+function loadQuestionRows(rows) {
+  questionRows = rows.filter((r) => Object.values(r).some((v) => String(v ?? '').trim() !== ''));
+  if (questionRows.length === 0) { setStatus('Không tìm thấy dữ liệu câu hỏi trong file/sheet.', 'err'); return; }
+  questionColumns = Object.keys(questionRows[0]);
+  const sel = document.getElementById('questionColumnSelect');
+  sel.innerHTML = questionColumns.map((c) => `<option value="${c}">${c}</option>`).join('');
+  const guess = questionColumns.find((c) => /câu|hỏi|question|đề|noi ?dung|content/i.test(c)) || questionColumns[0];
+  sel.value = guess;
+  currentQuestionIndex = 0;
+  document.getElementById('questionControls').style.display = 'flex';
+  document.getElementById('jumpQuestionInput').max = questionRows.length;
+  renderCurrentQuestion();
+}
+
+document.getElementById('excelUploadBtn').addEventListener('click', () => {
+  document.getElementById('excelFileInput').click();
+});
+document.getElementById('excelFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      loadQuestionRows(json);
+      setStatus(`Đã tải ${json.length} dòng dữ liệu từ file "${file.name}" (sheet "${sheetName}").`, 'ok');
+    } catch (err) {
+      setStatus('Lỗi khi đọc file Excel/CSV: ' + err.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+document.getElementById('gsheetLoadBtn').addEventListener('click', async () => {
+  const link = document.getElementById('gsheetLinkInput').value.trim();
+  if (!link) { setStatus('Dán link Google Sheet trước.', 'err'); return; }
+  const m = link.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!m) { setStatus('Không nhận diện được link Google Sheet — cần dạng https://docs.google.com/spreadsheets/d/.../edit', 'err'); return; }
+  const sheetId = m[1];
+  const gidMatch = link.match(/gid=([0-9]+)/);
+  const gid = gidMatch ? gidMatch[1] : '0';
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+
+  async function tryFetchText(url, label) {
+    setStatus(`Đang tải dữ liệu từ Google Sheet${label ? ' (' + label + ')' : ''}...`, '');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('mã lỗi ' + res.status);
+    return res.text();
+  }
+
+  let csvText = null;
+  let lastErr = null;
+
+  // Cách 1: tải trực tiếp (chỉ hoạt động nếu Google Sheet cho phép CORS, thường không ổn định)
+  try {
+    csvText = await tryFetchText(csvUrl, null);
+  } catch (err) {
+    lastErr = err;
+  }
+
+  // Cách 2: nếu tải trực tiếp lỗi (thường do trình duyệt chặn CORS, không phải do quyền chia sẻ sai),
+  // tự động thử lại qua proxy CORS công khai (allorigins.win).
+  if (csvText === null) {
+    try {
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl);
+      csvText = await tryFetchText(proxyUrl, 'qua proxy dự phòng');
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (csvText === null) {
+    setStatus('Không tải được Google Sheet (' + (lastErr ? lastErr.message : 'lỗi không rõ') + '). Nguyên nhân thường gặp: (1) Sheet CHƯA chia sẻ ở chế độ "Bất kỳ ai có đường liên kết" — vào Share/Chia sẻ kiểm tra lại; (2) proxy dự phòng đang quá tải/lỗi, thử lại sau ít phút; (3) mạng đang chặn — thử tải file Excel/CSV thủ công thay thế.', 'err');
+    return;
+  }
+
+  try {
+    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+    if (!parsed.data || parsed.data.length === 0 || /^<!DOCTYPE html/i.test(csvText.trim())) {
+      setStatus('Dữ liệu tải về không phải CSV hợp lệ (có thể Sheet chưa công khai, Google trả về trang đăng nhập thay vì dữ liệu). Kiểm tra lại quyền chia sẻ.', 'err');
+      return;
+    }
+    loadQuestionRows(parsed.data);
+    setStatus(`Đã tải ${parsed.data.length} dòng dữ liệu từ Google Sheet.`, 'ok');
+  } catch (err) {
+    setStatus('Lỗi khi xử lý dữ liệu CSV: ' + err.message, 'err');
+  }
+});
+
+document.getElementById('questionColumnSelect').addEventListener('change', renderCurrentQuestion);
+document.getElementById('prevQuestionBtn').addEventListener('click', () => {
+  if (currentQuestionIndex > 0) { currentQuestionIndex--; renderCurrentQuestion(); }
+});
+document.getElementById('nextQuestionBtn').addEventListener('click', () => {
+  if (currentQuestionIndex < questionRows.length - 1) { currentQuestionIndex++; renderCurrentQuestion(); }
+});
+document.getElementById('jumpQuestionBtn').addEventListener('click', () => {
+  const n = parseInt(document.getElementById('jumpQuestionInput').value, 10);
+  if (!isFinite(n) || n < 1 || n > questionRows.length) { setStatus(`Số câu không hợp lệ (1 - ${questionRows.length}).`, 'err'); return; }
+  goToQuestion(n);
+});
+
 let ggbApi = null;
 let autoUpdateEnabled = true;
 let typstReady = false;
@@ -1270,6 +1610,24 @@ const SHAPE_TEMPLATES = [
     'Polygon(A,B,C,D)', "Polygon(A',B',C',D')",
     "Segment(A,A')", "Segment(B,B')", "Segment(C,C')", "Segment(D,D')",
   ] },
+  { group: 'Không gian', label: 'Chóp S.ABCD, SA ⊥ đáy (đáy vuông)', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(4,4,0)', 'D=(0,4,0)', 'S=(0,0,5)',
+    'Polygon(A,B,C,D)', 'Segment(S,A)', 'Segment(S,B)', 'Segment(S,C)', 'Segment(S,D)',
+  ] },
+  { group: 'Không gian', label: 'Chóp S.ABC, SA ⊥ đáy', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(2,3.46,0)', 'S=(0,0,5)',
+    'Polygon(A,B,C)', 'Segment(S,A)', 'Segment(S,B)', 'Segment(S,C)',
+  ] },
+  { group: 'Không gian', label: 'Lăng trụ tam giác đều', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(2,3.46,0)',
+    "A'=(0,0,3)", "B'=(4,0,3)", "C'=(2,3.46,3)",
+    'Polygon(A,B,C)', "Polygon(A',B',C')",
+    "Segment(A,A')", "Segment(B,B')", "Segment(C,C')",
+  ] },
+  { group: 'Không gian', label: 'Chóp S.ABCD đáy hình chữ nhật', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(5,0,0)', 'C=(5,3,0)', 'D=(0,3,0)', 'S=(2.5,1.5,4)',
+    'Polygon(A,B,C,D)', 'Segment(S,A)', 'Segment(S,B)', 'Segment(S,C)', 'Segment(S,D)',
+  ] },
   { group: 'Không gian', label: 'Hình nón (chỉ hiển thị, chưa xuất code)', is3D: true, noExport: true, cmds: [
     'Cone((0,0,0),(0,0,4),2)',
   ] },
@@ -1344,21 +1702,47 @@ document.getElementById('axesToggle').addEventListener('change', (e) => {
   }
 });
 
+// Tính vùng nhìn Y sao cho tỉ lệ đơn vị/pixel bằng đúng trục X — đảm bảo hình tròn hiện tròn thật,
+// không bị dẹt/méo do khung GeoGebra không phải hình vuông theo pixel.
+function computeAspectCorrectYRange(xMin, xMax, yCenter = 0) {
+  const w = ggbContainerEl.clientWidth || 1200;
+  const h = 680; // chiều cao cố định của khung 2D (không tính lúc toàn màn hình)
+  const unitsPerPixel = (xMax - xMin) / w;
+  const yHalfRange = unitsPerPixel * (h / 2);
+  return [yCenter - yHalfRange, yCenter + yHalfRange];
+}
+
 function setSquareView(bound) {
   if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
   try {
-    ggbApi.setCoordSystem(-bound, bound, -bound, bound);
+    const [yMin, yMax] = computeAspectCorrectYRange(-bound, bound);
+    ggbApi.setCoordSystem(-bound, bound, yMin, yMax);
     document.getElementById('customXMin').value = -bound;
     document.getElementById('customXMax').value = bound;
-    document.getElementById('customYMin').value = -bound;
-    document.getElementById('customYMax').value = bound;
-    setStatus(`Đã đặt vùng nhìn hình vuông toạ độ từ −${bound} đến ${bound}.`, 'ok');
+    document.getElementById('customYMin').value = yMin.toFixed(2);
+    document.getElementById('customYMax').value = yMax.toFixed(2);
+    setStatus(`Đã đặt vùng nhìn từ −${bound} đến ${bound} (tỉ lệ 1:1 thật — hình tròn không bị méo).`, 'ok');
   } catch (err) {
     setStatus('Lỗi khi đặt vùng nhìn: ' + err.message, 'err');
   }
 }
 document.getElementById('viewSquare10Btn').addEventListener('click', () => setSquareView(10));
 document.getElementById('viewSquare5Btn').addEventListener('click', () => setSquareView(5));
+
+document.getElementById('fixRatioBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const xMin = parseFloat(document.getElementById('customXMin').value) || -10;
+  const xMax = parseFloat(document.getElementById('customXMax').value) || 10;
+  try {
+    const [yMin, yMax] = computeAspectCorrectYRange(xMin, xMax);
+    ggbApi.setCoordSystem(xMin, xMax, yMin, yMax);
+    document.getElementById('customYMin').value = yMin.toFixed(2);
+    document.getElementById('customYMax').value = yMax.toFixed(2);
+    setStatus('Đã sửa lại tỉ lệ 1:1 cho vùng nhìn hiện tại — hình tròn sẽ hiện tròn thật.', 'ok');
+  } catch (err) {
+    setStatus('Lỗi khi sửa tỉ lệ: ' + err.message, 'err');
+  }
+});
 
 document.getElementById('applyCustomViewBtn').addEventListener('click', () => {
   if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
@@ -1730,6 +2114,33 @@ function numericDerivativeAt(fname, x, h = 1e-3) {
   return (y1 - y2) / (2 * h);
 }
 
+document.getElementById('drawQuickFuncBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const name = document.getElementById('quickFuncName').value.trim() || 'f';
+  const expr = document.getElementById('quickFuncExpr').value.trim();
+  if (!expr) { setStatus('Cần nhập biểu thức hàm số.', 'err'); return; }
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) { setStatus('Tên hàm không hợp lệ — chỉ dùng chữ cái/số, bắt đầu bằng chữ.', 'err'); return; }
+  try {
+    const ok = ggbApi.evalCommand(`${name}(x)=${expr}`);
+    if (!ok) { setStatus(`Không vẽ được — kiểm tra lại biểu thức "${expr}".`, 'err'); return; }
+    ggbApi.showAllObjects();
+    setStatus(`Đã vẽ đồ thị ${name}(x) = ${expr}. Bấm "Sinh code" để xuất.`, 'ok');
+  } catch (e) {
+    setStatus(`Lỗi khi vẽ hàm số: ${e.message}`, 'err');
+  }
+});
+
+document.getElementById('clearQuickFuncBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const name = document.getElementById('quickFuncName').value.trim() || 'f';
+  try {
+    ggbApi.deleteObject(name);
+    setStatus(`Đã xoá hàm ${name}.`, 'ok');
+  } catch (e) {
+    setStatus(`Không tìm thấy hàm "${name}" để xoá.`, 'err');
+  }
+});
+
 document.getElementById('drawTangentBtn').addEventListener('click', () => {
   if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
   const fExpr = document.getElementById('tangentF').value.trim();
@@ -1831,6 +2242,117 @@ document.getElementById('drawMonotonicBtn').addEventListener('click', () => {
   setStatus(`Đã tô màu ${validRuns} khoảng đồng biến/nghịch biến và đánh dấu ${extremaCount} điểm cực trị (gần đúng) trên [${a}, ${b}]. Bấm "Sinh code" để xuất.`, 'ok');
 });
 
+// ===================== Hàm phân thức + tiệm cận tự động =====================
+document.getElementById('asymType').addEventListener('change', (e) => {
+  const is21 = e.target.value === '21';
+  document.getElementById('asym11Row').style.display = is21 ? 'none' : 'flex';
+  document.getElementById('asym21Row').style.display = is21 ? 'flex' : 'none';
+});
+
+document.getElementById('drawAsymptoteBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const type = document.getElementById('asymType').value;
+  const num = (id) => parseFloat(document.getElementById(id).value);
+
+  let fExpr, xVA, yHA = null, slantP = null, slantQ = null;
+
+  if (type === '11') {
+    const a = num('asymA'), b = num('asymB'), c = num('asymC'), d = num('asymD');
+    if (![a, b, c, d].every(isFinite)) { setStatus('Hệ số không hợp lệ.', 'err'); return; }
+    if (c === 0) { setStatus('Hệ số c (mẫu) không được bằng 0.', 'err'); return; }
+    xVA = -d / c;
+    yHA = a / c;
+    fExpr = `(${a}*x+${b})/(${c}*x+${d})`;
+  } else {
+    const a = num('asymA2'), b = num('asymB2'), c = num('asymC2'), d = num('asymD2'), e = num('asymE2');
+    if (![a, b, c, d, e].every(isFinite)) { setStatus('Hệ số không hợp lệ.', 'err'); return; }
+    if (d === 0) { setStatus('Hệ số d (mẫu) không được bằng 0.', 'err'); return; }
+    xVA = -e / d;
+    slantP = a / d;
+    slantQ = (b * d - e * a) / (d * d);
+    fExpr = `(${a}*x^2+${b}*x+${c})/(${d}*x+${e})`;
+  }
+
+  // Vẽ đồ thị hàm số thật trong GeoGebra
+  try {
+    ggbApi.evalCommand(`ggbAsymF(x)=${fExpr}`);
+  } catch (e) { setStatus('Lỗi khi định nghĩa hàm: ' + e.message, 'err'); return; }
+
+  // Lấy mẫu đồ thị (tách 2 nhánh quanh tiệm cận đứng để không vẽ vạch nối ngang qua chỗ gián đoạn)
+  const viewBound = 10;
+  const steps = 80;
+  const branches = [[-viewBound, xVA - 0.05], [xVA + 0.05, viewBound]];
+  branches.forEach(([lo, hi]) => {
+    if (hi <= lo) return;
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const x = lo + ((hi - lo) * i) / steps;
+      let y;
+      try { y = parseFloat(ggbApi.evalCommandCAS(`y=ggbAsymF(${x})`)); } catch (e) { y = NaN; }
+      if (isFinite(y) && Math.abs(y) < 60) pts.push([x, y]);
+    }
+    if (pts.length >= 2) customRegions.push({ type: 'path', points: pts, closed: false, style: { stroke: [0.1, 0.3, 0.8], fill: null, fillAlpha: null, width: 'thick', dash: null } });
+  });
+
+  // Tiệm cận đứng (luôn có)
+  const vaPts = [[xVA, -viewBound], [xVA, viewBound]];
+  customRegions.push({ type: 'path', points: vaPts, closed: false, style: { stroke: [0.6, 0.6, 0.6], fill: null, fillAlpha: null, width: null, dash: 'dashed' } });
+  try { ggbApi.evalCommand(`tiemCanDung: x=${xVA}`); } catch (e) {}
+
+  if (type === '11') {
+    // Tiệm cận ngang
+    const haPts = [[-viewBound, yHA], [viewBound, yHA]];
+    customRegions.push({ type: 'path', points: haPts, closed: false, style: { stroke: [0.6, 0.6, 0.6], fill: null, fillAlpha: null, width: null, dash: 'dashed' } });
+    try { ggbApi.evalCommand(`tiemCanNgang: y=${yHA}`); } catch (e) {}
+    setStatus(`Đã vẽ đồ thị. Tiệm cận đứng x = ${xVA.toFixed(3)}, tiệm cận ngang y = ${yHA.toFixed(3)}. Bấm "Sinh code" để xuất.`, 'ok');
+  } else {
+    // Tiệm cận xiên
+    const slPts = [[-viewBound, slantP * -viewBound + slantQ], [viewBound, slantP * viewBound + slantQ]];
+    customRegions.push({ type: 'path', points: slPts, closed: false, style: { stroke: [0.6, 0.6, 0.6], fill: null, fillAlpha: null, width: null, dash: 'dashed' } });
+    try { ggbApi.evalCommand(`tiemCanXien: y=${slantP}*x+${slantQ}`); } catch (e) {}
+    setStatus(`Đã vẽ đồ thị. Tiệm cận đứng x = ${xVA.toFixed(3)}, tiệm cận xiên y = ${slantP.toFixed(3)}x + ${slantQ.toFixed(3)}. Bấm "Sinh code" để xuất.`, 'ok');
+  }
+});
+
+// ===================== Khối tròn xoay quanh Ox =====================
+document.getElementById('drawRevolutionBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const fExpr = document.getElementById('revolutionF').value.trim();
+  const a = parseFloat(document.getElementById('revolutionA').value);
+  const b = parseFloat(document.getElementById('revolutionB').value);
+  if (!fExpr) { setStatus('Cần nhập hàm f(x).', 'err'); return; }
+  if (!isFinite(a) || !isFinite(b) || a >= b) { setStatus('Cận a phải nhỏ hơn cận b.', 'err'); return; }
+
+  try {
+    ggbApi.evalCommand(`ggbRevF(x)=${fExpr}`);
+    ggbApi.enable3D(true);
+    // Mặt tham số: X=u (trục Ox), Y=f(u)cos(v), Z=f(u)sin(v) — quét quanh Ox tạo khối tròn xoay
+    ggbApi.evalCommand(`Surface(u,ggbRevF(u)*cos(v),ggbRevF(u)*sin(v),u,${a},${b},v,0,2*pi)`);
+    ggbApi.showAllObjects();
+  } catch (e) {
+    setStatus('Lỗi khi tạo khối tròn xoay: ' + e.message, 'err');
+    return;
+  }
+
+  // Tính thể tích bằng số: V = π ∫[a,b] f(x)² dx (quy tắc Simpson, đã kiểm chứng đúng với hình nón mẫu)
+  const n = 200;
+  const h = (b - a) / n;
+  let sum = 0;
+  let sampleFail = false;
+  for (let i = 0; i <= n; i++) {
+    const x = a + i * h;
+    let y;
+    try { y = parseFloat(ggbApi.evalCommandCAS(`y=ggbRevF(${x})`)); } catch (e) { y = NaN; }
+    const fx2 = isFinite(y) ? y * y : (sampleFail = true, 0);
+    const coeff = (i === 0 || i === n) ? 1 : (i % 2 === 0 ? 2 : 4);
+    sum += coeff * fx2;
+  }
+  const integral = (sum * h) / 3;
+  const volume = Math.PI * integral;
+  const failNote = sampleFail ? ' (một vài điểm mẫu không xác định, kết quả có thể không chính xác tuyệt đối)' : '';
+  setStatus(`Đã tạo khối tròn xoay quanh Ox từ x=${a} đến x=${b}. Thể tích V ≈ ${volume.toFixed(4)} (đơn vị³)${failNote}. Lưu ý: đây là mặt cong 3D thật, CHƯA xuất được code TikZ/CeTZ — chỉ xem trực quan trong GeoGebra.`, 'ok');
+});
+
 // ===================== Công cụ 3D mở rộng =====================
 document.getElementById('enable3DBtn').addEventListener('click', () => {
   if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
@@ -1926,30 +2448,38 @@ async function renderCetzPreview(cetzBody) {
 }
 const ggbContainerEl = document.getElementById('ggb-container');
 const ggb = new GGBApplet({
-  appName: 'suite',
+  appName: 'classic',
   width: ggbContainerEl.clientWidth || 1200,
   height: 680,
   showToolBar: true,
-  showMenuBar: false,
-  showAlgebraInput: true,
+  showMenuBar: true,
+  showAlgebraInput: false,
   showResetIcon: true,
   allowStyleBar: true,
+  enableRightClick: true,
   language: 'vi',
-  fontSize: 22,
+  fontSize: 66,
   appletOnLoad: (api) => {
     ggbApi = api;
-    setStatus('GeoGebra đã sẵn sàng — dùng nút chuyển đổi 2D/3D ngay trong GeoGebra (góc trên bên trái) để chuyển view khi cần. Vẽ hình rồi bấm "Sinh code".', 'ok');
+    try {
+      api.setGridVisible(false);
+      api.setAxesVisible(false, false);
+      const [yMin, yMax] = computeAspectCorrectYRange(-10, 10);
+      api.setCoordSystem(-10, 10, yMin, yMax);
+    } catch (e) { console.warn('[ggb2code] Không ẩn được lưới/trục hoặc đặt tỉ lệ:', e); }
+    setStatus('GeoGebra đã sẵn sàng (đã ẩn lưới/trục, ẩn Dạng đại số, tỉ lệ 1:1). Vẽ hình rồi bấm "Sinh code".', 'ok');
 
-    // Áp mặc định cho đối tượng MỚI vẽ: đường/đoạn/tia/vector màu đen, chấm điểm nhỏ lại còn ~1/2 mặc định.
-    // (GeoGebra không có API đổi cỡ chữ nhãn từng đối tượng lúc chạy — cỡ chữ nhãn to hơn đã áp dụng
-    // qua tham số khởi tạo fontSize ở trên, áp dụng cho toàn bộ chữ trong ứng dụng.)
+    // Áp mặc định cho đối tượng MỚI vẽ: đường/đoạn/tia/vector và điểm đều màu đen,
+    // chấm điểm nhỏ lại còn ~1/2 mặc định, cỡ chữ nhãn to gấp đôi (áp dụng qua fontSize ở trên cho toàn ứng dụng).
     function applyDefaultStyleToNewObject(objName) {
       try {
         const type = (api.getObjectType(objName) || '').toLowerCase();
         if (['segment', 'line', 'ray', 'vector'].some((t) => type.startsWith(t))) {
           api.setColor(objName, 0, 0, 0);
+          api.setLabelVisible(objName, false); // ẩn tên của đường (f, g, h...)
         } else if (type.startsWith('point')) {
           api.setPointSize(objName, 3); // mặc định GeoGebra thường là 5 — 3 xấp xỉ giảm còn một nửa
+          api.setColor(objName, 0, 0, 0); // tên điểm (và chấm điểm) màu đen
         }
       } catch (e) {}
     }
@@ -2113,6 +2643,22 @@ document.getElementById('generateBtn').addEventListener('click', () => {
 document.getElementById('autoUpdateToggle').addEventListener('change', (e) => {
   autoUpdateEnabled = e.target.checked;
 });
+
+// ===================== Toggle drawer công cụ =====================
+const toolsDrawerEl = document.getElementById('toolsDrawer');
+const toolsBackdropEl = document.getElementById('toolsBackdrop');
+function openToolsDrawer() {
+  toolsDrawerEl.classList.add('open');
+  toolsBackdropEl.classList.add('open');
+}
+function closeToolsDrawer() {
+  toolsDrawerEl.classList.remove('open');
+  toolsBackdropEl.classList.remove('open');
+}
+document.getElementById('toolsToggleBtn').addEventListener('click', openToolsDrawer);
+document.getElementById('toolsCloseBtn').addEventListener('click', closeToolsDrawer);
+toolsBackdropEl.addEventListener('click', closeToolsDrawer);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeToolsDrawer(); });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   if (ggbApi) ggbApi.newConstruction();
