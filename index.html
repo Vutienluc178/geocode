@@ -142,6 +142,12 @@
     border-radius: 6px; padding: 5px 8px; font-size: 12.5px;
   }
   .region-hint { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin: 4px 0; }
+  .figure-library-list { margin: 8px 0; font-size: 12px; color: var(--text); }
+  .figure-lib-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 5px 8px; background: var(--panel2); border-radius: 6px; margin-bottom: 4px;
+  }
+  .figure-lib-item button { padding: 2px 8px; font-size: 11px; }
   .region-textarea {
     width: 100%; min-height: 70px; background: var(--panel2); color: var(--text);
     border: 1px solid var(--border); border-radius: 6px; padding: 8px;
@@ -320,6 +326,115 @@
     </div>
   </details>
 
+  <details class="region-tools">
+    <summary>Nhãn độ dài / số đo góc — bấm để mở</summary>
+    <div class="region-tool-box">
+      <h3>1. Nhãn độ dài cạnh</h3>
+      <div class="region-row">
+        <label>Điểm 1: <input type="text" id="lenP1" class="region-input-small" placeholder="A"></label>
+        <label>Điểm 2: <input type="text" id="lenP2" class="region-input-small" placeholder="B"></label>
+        <label>Giá trị: <input type="text" id="lenValue" class="region-input" placeholder="5 cm"></label>
+        <button class="btn-secondary" id="addLengthLabelBtn">Thêm nhãn →</button>
+      </div>
+    </div>
+    <div class="region-tool-box">
+      <h3>2. Nhãn số đo góc</h3>
+      <div class="region-row">
+        <label>Điểm 1: <input type="text" id="angP1" class="region-input-small" placeholder="A"></label>
+        <label>Đỉnh: <input type="text" id="angVertex" class="region-input-small" placeholder="B"></label>
+        <label>Điểm 2: <input type="text" id="angP2" class="region-input-small" placeholder="C"></label>
+        <label>Giá trị: <input type="text" id="angValue" class="region-input" placeholder="60°"></label>
+        <button class="btn-secondary" id="addAngleLabelBtn">Thêm nhãn →</button>
+      </div>
+      <p class="region-hint">Điểm 1/Đỉnh/Điểm 2 là tên các điểm đã có trong GeoGebra (VD tam giác ABC, đỉnh là B thì góc B nhập: Điểm1=A, Đỉnh=B, Điểm2=C).</p>
+    </div>
+  </details>
+
+  <details class="region-tools">
+    <summary>Chế độ Đề / Đáp án (ẩn - hiện đường phụ) — bấm để mở</summary>
+    <div class="region-tool-box">
+      <div class="region-row">
+        <label>Tên đối tượng đường phụ (phân cách dấu phẩy): <input type="text" id="auxObjectNames" class="region-input" style="width:220px;" placeholder="d1,H,M"></label>
+      </div>
+      <div class="region-row">
+        <button class="btn-secondary" id="hideAuxBtn">Ẩn (chế độ Đề)</button>
+        <button class="btn-secondary" id="showAuxBtn">Hiện (chế độ Đáp án)</button>
+      </div>
+      <p class="region-hint">Vẽ đầy đủ hình (kể cả đường phụ: đường cao, trung tuyến...), nhập tên các đối tượng phụ vào đây. Ẩn đi rồi "Sinh code" → dùng cho Đề. Hiện lại rồi "Sinh code" → dùng cho Đáp án.</p>
+    </div>
+  </details>
+
+  <details class="region-tools">
+    <summary>Thư viện hình (xuất nhiều hình 1 lần) — bấm để mở</summary>
+    <div class="region-tool-box">
+      <div class="region-row">
+        <button class="btn-secondary" id="saveFigureBtn">Lưu hình hiện tại vào thư viện</button>
+        <button class="btn-secondary" id="clearLibraryBtn">Xoá thư viện</button>
+      </div>
+      <div id="figureLibraryList" class="figure-library-list"><span class="ph">Chưa lưu hình nào.</span></div>
+      <div class="region-row">
+        <button class="btn-secondary" id="exportLibraryTikzBtn">Tải tất cả (.tex)</button>
+        <button class="btn-secondary" id="exportLibraryCetzBtn">Tải tất cả (.typ)</button>
+      </div>
+    </div>
+  </details>
+
+  <details class="region-tools">
+    <summary>Công cụ khảo sát hàm số (tiếp tuyến · đồng biến/nghịch biến · cực trị) — bấm để mở</summary>
+    <div class="region-tool-box">
+      <h3>1. Vẽ tiếp tuyến tại 1 điểm</h3>
+      <div class="region-row">
+        <label>Hàm f(x): <input type="text" id="tangentF" class="region-input" placeholder="VD: x^2-3x+1"></label>
+        <label>x0: <input type="number" id="tangentX0" class="region-input-small" step="any" value="1"></label>
+        <button class="btn-secondary" id="drawTangentBtn">Vẽ tiếp tuyến →</button>
+      </div>
+    </div>
+    <div class="region-tool-box">
+      <h3>2. Tô màu đồng biến/nghịch biến + đánh dấu cực trị</h3>
+      <div class="region-row">
+        <label>Hàm f(x): <input type="text" id="monoF" class="region-input" placeholder="VD: x^3-3x"></label>
+        <label>Từ: <input type="number" id="monoA" class="region-input-small" step="any" value="-3"></label>
+        <label>Đến: <input type="number" id="monoB" class="region-input-small" step="any" value="3"></label>
+        <button class="btn-secondary" id="drawMonotonicBtn">Tô màu & đánh dấu →</button>
+      </div>
+      <p class="region-hint">Xanh dương = đồng biến, đỏ = nghịch biến. Cực trị (CĐ/CT) tự phát hiện theo điểm đổi dấu đạo hàm (ước lượng bằng sai phân số, đã kiểm chứng đúng với hàm bậc 3).</p>
+    </div>
+  </details>
+
+  <details class="region-tools">
+    <summary>Công cụ 3D mở rộng (bật/tắt 3D · nét khuất · tuỳ chỉnh phép chiếu) — bấm để mở</summary>
+
+    <div class="region-tool-box">
+      <h3>1. Bật/tắt chế độ Không gian 3D</h3>
+      <div class="region-row">
+        <button class="btn-secondary" id="enable3DBtn">Bật 3D</button>
+        <button class="btn-secondary" id="disable3DBtn">Tắt 3D (về 2D)</button>
+      </div>
+    </div>
+
+    <div class="region-tool-box">
+      <h3>2. Đánh dấu cạnh khuất (nét đứt khi xuất code)</h3>
+      <div class="region-row">
+        <label>Điểm 1: <input type="text" id="hiddenEdgeP1" class="region-input-small" placeholder="D"></label>
+        <label>Điểm 2: <input type="text" id="hiddenEdgeP2" class="region-input-small" placeholder="D'"></label>
+        <button class="btn-secondary" id="markHiddenEdgeBtn">Đánh dấu khuất</button>
+        <button class="btn-secondary" id="unmarkHiddenEdgeBtn">Bỏ đánh dấu</button>
+        <button class="btn-secondary" id="clearHiddenEdgesBtn">Xoá tất cả</button>
+      </div>
+      <p class="region-hint">Chỉ áp dụng cho cạnh là đoạn thẳng/đường thẳng riêng (VD các cạnh bên DD'). Cạnh nằm trong 1 mặt vẽ bằng Polygon (VD ABCD) chưa tách riêng được từng cạnh để đánh dấu — Thầy nhìn hình 3D xoay được trong GeoGebra để xác định cạnh nào cần đánh dấu, tool không tự đoán để tránh sai (đã thử thuật toán tự động nhưng cho kết quả không khớp quy ước sách giáo khoa).</p>
+    </div>
+
+    <div class="region-tool-box">
+      <h3>3. Tuỳ chỉnh phép chiếu song song (mặc định: góc 45°, tỉ lệ 1/2)</h3>
+      <div class="region-row">
+        <label>Góc trục sâu: <input type="number" id="projAngle" class="region-input-small" value="45" step="1">°</label>
+        <label>Tỉ lệ trục sâu: <input type="number" id="projScale" class="region-input-small" value="0.5" step="0.05"></label>
+        <button class="btn-secondary" id="applyProjectionBtn">Áp dụng</button>
+      </div>
+      <p class="region-hint">Một số sách dùng góc 30° hoặc tỉ lệ 2/3 thay vì 45°/1/2 — chỉnh ở đây rồi bấm "Sinh code" lại để áp dụng cho lần xuất tiếp theo.</p>
+    </div>
+  </details>
+
   <div class="ggb-wrapper">
     <div id="ggb-container"></div>
   </div>
@@ -439,8 +554,8 @@ function getPointCoord3D(api, name) {
 // với x = ngang, y = sâu (trục lùi vào), z = cao (trục đứng).
 // Trục sâu (y) được chiếu chéo góc 45°, thu tỉ lệ 1/2 — đúng quy ước "hình chiếu trục đo xiên góc cân"
 // (cabinet oblique projection) hay dùng khi vẽ tay hình chóp/hình hộp.
-const PROJ_K = 0.5;
-const PROJ_THETA = (45 * Math.PI) / 180;
+let PROJ_K = 0.5;
+let PROJ_THETA = (45 * Math.PI) / 180;
 function projectPoint([x, y, z], is3D) {
   if (!is3D) return [x, y];
   return [x + PROJ_K * y * Math.cos(PROJ_THETA), z + PROJ_K * y * Math.sin(PROJ_THETA)];
@@ -552,7 +667,11 @@ function buildModelFromGGB(api) {
       const pts = ptNames.map((n) => getProjectedPointCoord(n)).filter((p) => isFinite(p[0]) && isFinite(p[1]));
       if (pts.length >= 2) {
         trackBBox(pts);
-        elements.push({ type: 'path', points: pts.slice(0, 2), closed: false, style });
+        let edgeStyle = style;
+        if (ptNames.length >= 2 && manualDashedEdges.has([ptNames[0], ptNames[1]].sort().join('|'))) {
+          edgeStyle = { ...style, dash: 'dashed' };
+        }
+        elements.push({ type: 'path', points: pts.slice(0, 2), closed: false, style: edgeStyle });
       }
       return;
     }
@@ -877,6 +996,9 @@ function generateTikZ(model) {
 // Các vùng/đường do 2 công cụ này tạo ra được lưu riêng ở đây, rồi gộp vào model khi sinh code —
 // không phụ thuộc đọc lại object phức tạp (Integral/Inequality) từ GeoGebra, vốn khó đọc chính xác qua API.
 let customRegions = [];
+// Các cạnh (theo cặp tên điểm) được Thầy đánh dấu thủ công là "nét khuất" — đáng tin cậy hơn
+// thuật toán tự động vì Thầy nhìn thấy và xoay được hình 3D thật trong GeoGebra.
+let manualDashedEdges = new Set();
 
 // Chuyển biểu thức toán kiểu "2x+3y" thành JS hợp lệ "2*x+3*y" để eval được
 function toJsMath(expr) {
@@ -1137,6 +1259,16 @@ const SHAPE_TEMPLATES = [
     "A'=(1,0.58,3)", "B'=(3,0.58,3)", "C'=(2,2.31,3)",
     'Polygon(A,B,C)', "Polygon(A',B',C')",
     "Segment(A,A')", "Segment(B,B')", "Segment(C,C')",
+  ] },
+  { group: 'Không gian', label: 'Tứ diện đều', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(2,3.46,0)', 'D=(2,1.153,3.266)',
+    'Polygon(A,B,C)', "Segment(D,A)", "Segment(D,B)", "Segment(D,C)",
+  ] },
+  { group: 'Không gian', label: 'Hình hộp xiên (đáy hình bình hành)', is3D: true, cmds: [
+    'A=(0,0,0)', 'B=(4,0,0)', 'C=(6,3,0)', 'D=(2,3,0)',
+    "A'=(1,0.5,3)", "B'=(5,0.5,3)", "C'=(7,3.5,3)", "D'=(3,3.5,3)",
+    'Polygon(A,B,C,D)', "Polygon(A',B',C',D')",
+    "Segment(A,A')", "Segment(B,B')", "Segment(C,C')", "Segment(D,D')",
   ] },
   { group: 'Không gian', label: 'Hình nón (chỉ hiển thị, chưa xuất code)', is3D: true, noExport: true, cmds: [
     'Cone((0,0,0),(0,0,4),2)',
@@ -1453,6 +1585,298 @@ document.getElementById('vennShadeBtn').addEventListener('click', () => {
   setStatus(`Đã tô ${opLabel}. Bấm "Sinh code" để xuất.`, 'ok');
 });
 
+// ===================== NHÓM A: Nhãn độ dài / góc =====================
+function getLivePointCoord(name) {
+  try {
+    const x = ggbApi.getXcoord(name), y = ggbApi.getYcoord(name);
+    if (!isFinite(x) || !isFinite(y)) return null;
+    let z = 0;
+    try { z = ggbApi.getZcoord(name) || 0; } catch (e) {}
+    return { raw: [x, y, z], is3D: Math.abs(z) > 1e-9 };
+  } catch (e) { return null; }
+}
+
+document.getElementById('addLengthLabelBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const n1 = document.getElementById('lenP1').value.trim();
+  const n2 = document.getElementById('lenP2').value.trim();
+  const val = document.getElementById('lenValue').value.trim();
+  if (!n1 || !n2 || !val) { setStatus('Cần nhập đủ điểm 1, điểm 2, giá trị.', 'err'); return; }
+  const p1 = getLivePointCoord(n1), p2 = getLivePointCoord(n2);
+  if (!p1 || !p2) { setStatus(`Không tìm thấy điểm "${n1}" hoặc "${n2}" trong GeoGebra — kiểm tra lại tên điểm.`, 'err'); return; }
+  const is3D = p1.is3D || p2.is3D;
+  // Toạ độ 3D thật (để đặt Text ngay trong khung nhìn GeoGebra, kể cả khi đang ở chế độ 3D)
+  const mid3D = [(p1.raw[0] + p2.raw[0]) / 2, (p1.raw[1] + p2.raw[1]) / 2, (p1.raw[2] + p2.raw[2]) / 2];
+  try {
+    if (is3D) ggbApi.evalCommand(`Text("${val}",(${mid3D[0]},${mid3D[1]},${mid3D[2]}))`);
+    else ggbApi.evalCommand(`Text("${val}",(${mid3D[0]},${mid3D[1]}))`);
+  } catch (e) {}
+  // Toạ độ 2D đã chiếu (để xuất đúng vị trí trong code TikZ/CeTZ)
+  const P1 = projectPoint(p1.raw, is3D), P2 = projectPoint(p2.raw, is3D);
+  const mx = (P1[0] + P2[0]) / 2, my = (P1[1] + P2[1]) / 2;
+  const dx = P2[0] - P1[0], dy = P2[1] - P1[1];
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  const offset = 0.35;
+  const pos = [mx + nx * offset, my + ny * offset];
+  customRegions.push({ type: 'node', pos, anchor: 'center', text: val, style: { stroke: [0, 0, 0] } });
+  setStatus(`Đã thêm nhãn "${val}" cho đoạn ${n1}${n2}${is3D ? ' (đã áp dụng phép chiếu 3D)' : ''}. Bấm "Sinh code" để xuất.`, 'ok');
+});
+
+document.getElementById('addAngleLabelBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const n1 = document.getElementById('angP1').value.trim();
+  const nV = document.getElementById('angVertex').value.trim();
+  const n2 = document.getElementById('angP2').value.trim();
+  const val = document.getElementById('angValue').value.trim();
+  if (!n1 || !nV || !n2 || !val) { setStatus('Cần nhập đủ điểm 1, đỉnh, điểm 2, giá trị.', 'err'); return; }
+  const p1 = getLivePointCoord(n1), v = getLivePointCoord(nV), p2 = getLivePointCoord(n2);
+  if (!p1 || !v || !p2) { setStatus('Không tìm thấy đủ 3 điểm trong GeoGebra — kiểm tra lại tên điểm.', 'err'); return; }
+  const is3D = p1.is3D || v.is3D || p2.is3D;
+  const P1 = projectPoint(p1.raw, is3D), V = projectPoint(v.raw, is3D), P2 = projectPoint(p2.raw, is3D);
+  let a1 = Math.atan2(P1[1] - V[1], P1[0] - V[0]);
+  let a2 = Math.atan2(P2[1] - V[1], P2[0] - V[0]);
+  if (a1 < 0) a1 += 2 * Math.PI;
+  if (a2 < 0) a2 += 2 * Math.PI;
+  if (a2 < a1) a2 += 2 * Math.PI;
+  const mid = (a1 + a2) / 2;
+  const r = 0.65;
+  const pos = [V[0] + r * Math.cos(mid), V[1] + r * Math.sin(mid)];
+  try {
+    if (is3D) {
+      // Đặt Text gần đỉnh thật trong không gian 3D (lệch nhẹ theo hướng trung bình của 2 điểm còn lại)
+      const mid3D = [
+        v.raw[0] + 0.5 * ((p1.raw[0] - v.raw[0]) / (Math.hypot(...p1.raw.map((c, i) => c - v.raw[i])) || 1) + (p2.raw[0] - v.raw[0]) / (Math.hypot(...p2.raw.map((c, i) => c - v.raw[i])) || 1)),
+        v.raw[1] + 0.5 * ((p1.raw[1] - v.raw[1]) / (Math.hypot(...p1.raw.map((c, i) => c - v.raw[i])) || 1) + (p2.raw[1] - v.raw[1]) / (Math.hypot(...p2.raw.map((c, i) => c - v.raw[i])) || 1)),
+        v.raw[2] + 0.5 * ((p1.raw[2] - v.raw[2]) / (Math.hypot(...p1.raw.map((c, i) => c - v.raw[i])) || 1) + (p2.raw[2] - v.raw[2]) / (Math.hypot(...p2.raw.map((c, i) => c - v.raw[i])) || 1)),
+      ];
+      ggbApi.evalCommand(`Text("${val}",(${mid3D[0]},${mid3D[1]},${mid3D[2]}))`);
+    } else {
+      ggbApi.evalCommand(`Text("${val}",(${pos[0]},${pos[1]}))`);
+    }
+  } catch (e) {}
+  customRegions.push({ type: 'node', pos, anchor: 'center', text: val, style: { stroke: [0, 0, 0] } });
+  setStatus(`Đã thêm nhãn góc "${val}" tại đỉnh ${nV}${is3D ? ' (đã áp dụng phép chiếu 3D)' : ''}. Bấm "Sinh code" để xuất.`, 'ok');
+});
+
+// ===================== NHÓM A: Chế độ Đề / Đáp án =====================
+function toggleAuxVisibility(visible) {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const names = document.getElementById('auxObjectNames').value.split(',').map((s) => s.trim()).filter(Boolean);
+  if (names.length === 0) { setStatus('Nhập tên đối tượng đường phụ trước (phân cách dấu phẩy).', 'err'); return; }
+  let okCount = 0; const failNames = [];
+  names.forEach((n) => {
+    try { ggbApi.setVisible(n, visible); okCount++; } catch (e) { failNames.push(n); }
+  });
+  const failNote = failNames.length > 0 ? ` (không tìm thấy: ${failNames.join(', ')})` : '';
+  setStatus(`Đã ${visible ? 'HIỆN' : 'ẨN'} ${okCount}/${names.length} đối tượng${failNote}. Bấm "Sinh code" để xuất bản ${visible ? 'Đáp án' : 'Đề'}.`, 'ok');
+}
+document.getElementById('hideAuxBtn').addEventListener('click', () => toggleAuxVisibility(false));
+document.getElementById('showAuxBtn').addEventListener('click', () => toggleAuxVisibility(true));
+
+// ===================== NHÓM A: Thư viện hình =====================
+let figureLibrary = [];
+function refreshFigureLibraryList() {
+  const box = document.getElementById('figureLibraryList');
+  if (figureLibrary.length === 0) { box.innerHTML = '<span class="ph">Chưa lưu hình nào.</span>'; return; }
+  box.innerHTML = figureLibrary.map((f, i) => `<div class="figure-lib-item"><span>${f.label} (${f.model.elements.length} đối tượng)</span><button class="btn-secondary lib-remove-btn" data-idx="${i}">Xoá</button></div>`).join('');
+  box.querySelectorAll('.lib-remove-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      figureLibrary.splice(parseInt(btn.getAttribute('data-idx'), 10), 1);
+      refreshFigureLibraryList();
+    });
+  });
+}
+
+function downloadTextFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('saveFigureBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const model = buildModelFromGGB(ggbApi);
+  if (model.elements.length === 0) { setStatus('Chưa có gì để lưu — vẽ hình trước đã.', 'err'); return; }
+  figureLibrary.push({ label: `Hình ${figureLibrary.length + 1}`, model });
+  refreshFigureLibraryList();
+  setStatus(`Đã lưu "${figureLibrary[figureLibrary.length - 1].label}" vào thư viện (hiện có ${figureLibrary.length} hình). Vẽ hình tiếp theo rồi lưu tiếp, hoặc xoá hình vẽ để bắt đầu hình mới.`, 'ok');
+});
+document.getElementById('clearLibraryBtn').addEventListener('click', () => {
+  figureLibrary = [];
+  refreshFigureLibraryList();
+  setStatus('Đã xoá thư viện hình.', '');
+});
+document.getElementById('exportLibraryTikzBtn').addEventListener('click', () => {
+  if (figureLibrary.length === 0) { setStatus('Thư viện đang trống — lưu ít nhất 1 hình trước.', 'err'); return; }
+  const combined = figureLibrary.map((f) => `% ===== ${f.label} =====\n${generateTikZ(f.model)}`).join('\n\n');
+  downloadTextFile('cac-hinh.tex', combined);
+  setStatus(`Đã tải file chứa ${figureLibrary.length} hình (TikZ).`, 'ok');
+});
+document.getElementById('exportLibraryCetzBtn').addEventListener('click', () => {
+  if (figureLibrary.length === 0) { setStatus('Thư viện đang trống — lưu ít nhất 1 hình trước.', 'err'); return; }
+  const combined = figureLibrary.map((f) => `// ===== ${f.label} =====\n${generateCetz(f.model)}`).join('\n\n');
+  downloadTextFile('cac-hinh.typ', combined);
+  setStatus(`Đã tải file chứa ${figureLibrary.length} hình (CeTZ).`, 'ok');
+});
+
+// ===================== NHÓM B: Khảo sát hàm số =====================
+function numericDerivativeAt(fname, x, h = 1e-3) {
+  const y1 = parseFloat(ggbApi.evalCommandCAS(`y=${fname}(${x + h})`));
+  const y2 = parseFloat(ggbApi.evalCommandCAS(`y=${fname}(${x - h})`));
+  return (y1 - y2) / (2 * h);
+}
+
+document.getElementById('drawTangentBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const fExpr = document.getElementById('tangentF').value.trim();
+  const x0 = parseFloat(document.getElementById('tangentX0').value);
+  if (!isFinite(x0)) { setStatus('x0 không hợp lệ.', 'err'); return; }
+  const fname = fExpr ? 'ggbTanF' : 'f';
+  try {
+    if (fExpr) ggbApi.evalCommand(`ggbTanF(x)=${fExpr}`);
+  } catch (e) { setStatus('Lỗi khi định nghĩa hàm: ' + e.message, 'err'); return; }
+
+  let y0, slope;
+  try {
+    y0 = parseFloat(ggbApi.evalCommandCAS(`y=${fname}(${x0})`));
+    slope = numericDerivativeAt(fname, x0);
+  } catch (e) {
+    setStatus(`Không tính được f(x0) hoặc đạo hàm — kiểm tra lại hàm số ${fExpr ? '' : '(để trống thì cần đã có sẵn hàm tên "f" trong GeoGebra)'}.`, 'err');
+    return;
+  }
+  if (!isFinite(y0) || !isFinite(slope)) { setStatus('Hàm số không xác định hoặc không khả vi tại x0.', 'err'); return; }
+
+  try {
+    ggbApi.evalCommand(`ggbTanP=(${x0},${y0})`);
+    ggbApi.evalCommand(`Tangent(ggbTanP, ${fname})`);
+  } catch (e) {}
+
+  const ext = 3;
+  const p1 = [x0 - ext, y0 - ext * slope], p2 = [x0 + ext, y0 + ext * slope];
+  const color = [0.85, 0.2, 0.2];
+  customRegions.push({ type: 'path', points: [p1, p2], closed: false, style: { stroke: color, fill: null, fillAlpha: null, width: null, dash: null } });
+  customRegions.push({ type: 'pointmark', pos: [x0, y0], style: { stroke: color } });
+  customRegions.push({ type: 'node', pos: [x0 + 0.3, y0 + 0.3], anchor: 'above right', text: `k=${slope.toFixed(2)}`, style: { stroke: color } });
+  setStatus(`Đã vẽ tiếp tuyến tại x0=${x0}, hệ số góc k ≈ ${slope.toFixed(3)}. Bấm "Sinh code" để xuất.`, 'ok');
+});
+
+document.getElementById('drawMonotonicBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  const fExpr = document.getElementById('monoF').value.trim();
+  const a = parseFloat(document.getElementById('monoA').value);
+  const b = parseFloat(document.getElementById('monoB').value);
+  if (!fExpr) { setStatus('Cần nhập hàm f(x).', 'err'); return; }
+  if (!isFinite(a) || !isFinite(b) || a >= b) { setStatus('Khoảng [a,b] không hợp lệ.', 'err'); return; }
+  try { ggbApi.evalCommand(`ggbMonoF(x)=${fExpr}`); } catch (e) { setStatus('Lỗi khi định nghĩa hàm: ' + e.message, 'err'); return; }
+
+  const steps = 100;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const x = a + ((b - a) * i) / steps;
+    let y;
+    try { y = parseFloat(ggbApi.evalCommandCAS(`y=ggbMonoF(${x})`)); } catch (e) { y = NaN; }
+    pts.push([x, y]);
+  }
+  const derivs = pts.map((p, i) => {
+    if (i === 0 || i === pts.length - 1) return 0;
+    const dx = pts[i + 1][0] - pts[i - 1][0];
+    return (pts[i + 1][1] - pts[i - 1][1]) / dx;
+  });
+  const eps = 1e-6;
+  const runs = [];
+  let current = [pts[0]];
+  let currentSign = null;
+  for (let i = 1; i < derivs.length - 1; i++) {
+    const sign = derivs[i] > eps ? 1 : (derivs[i] < -eps ? -1 : 0);
+    if (currentSign === null) currentSign = sign;
+    if (sign !== 0 && sign !== currentSign) {
+      runs.push({ pts: current, sign: currentSign });
+      current = [pts[i]];
+      currentSign = sign;
+    } else {
+      current.push(pts[i]);
+    }
+  }
+  current.push(pts[pts.length - 1]);
+  runs.push({ pts: current, sign: currentSign });
+
+  let validRuns = 0;
+  runs.forEach((run) => {
+    const validPts = run.pts.filter((p) => isFinite(p[1]));
+    if (validPts.length < 2) return;
+    validRuns++;
+    const color = run.sign >= 0 ? [0.15, 0.4, 0.85] : [0.85, 0.2, 0.2];
+    customRegions.push({ type: 'path', points: validPts, closed: false, style: { stroke: color, fill: null, fillAlpha: null, width: 'thick', dash: null } });
+  });
+
+  let extremaCount = 0;
+  for (let i = 1; i < runs.length; i++) {
+    const prevSign = runs[i - 1].sign, curSign = runs[i].sign;
+    if (prevSign !== 0 && curSign !== 0 && prevSign !== curSign) {
+      const pt = runs[i].pts[0];
+      const label = prevSign > 0 && curSign < 0 ? 'CĐ' : (prevSign < 0 && curSign > 0 ? 'CT' : '');
+      if (label && isFinite(pt[1])) {
+        extremaCount++;
+        customRegions.push({ type: 'pointmark', pos: pt, style: { stroke: [0, 0, 0] } });
+        customRegions.push({ type: 'node', pos: [pt[0], pt[1] + 0.4], anchor: 'above', text: label, style: { stroke: [0, 0, 0] } });
+        try { ggbApi.evalCommand(`Text("${label}",(${pt[0]},${pt[1] + 0.4}))`); } catch (e) {}
+      }
+    }
+  }
+
+  setStatus(`Đã tô màu ${validRuns} khoảng đồng biến/nghịch biến và đánh dấu ${extremaCount} điểm cực trị (gần đúng) trên [${a}, ${b}]. Bấm "Sinh code" để xuất.`, 'ok');
+});
+
+// ===================== Công cụ 3D mở rộng =====================
+document.getElementById('enable3DBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  try { ggbApi.enable3D(true); setStatus('Đã bật chế độ Không gian 3D.', 'ok'); }
+  catch (e) { setStatus('Lỗi khi bật 3D: ' + e.message, 'err'); }
+});
+document.getElementById('disable3DBtn').addEventListener('click', () => {
+  if (!ggbApi) { setStatus('GeoGebra chưa tải xong.', 'err'); return; }
+  try { ggbApi.enable3D(false); setStatus('Đã tắt chế độ 3D, về lại 2D.', 'ok'); }
+  catch (e) { setStatus('Lỗi khi tắt 3D: ' + e.message, 'err'); }
+});
+
+function updateHiddenEdgesHint() {
+  const n = manualDashedEdges.size;
+  setStatus(n > 0 ? `Hiện có ${n} cạnh đang được đánh dấu khuất: ${[...manualDashedEdges].join(', ')}.` : 'Chưa đánh dấu cạnh khuất nào.', '');
+}
+
+document.getElementById('markHiddenEdgeBtn').addEventListener('click', () => {
+  const p1 = document.getElementById('hiddenEdgeP1').value.trim();
+  const p2 = document.getElementById('hiddenEdgeP2').value.trim();
+  if (!p1 || !p2) { setStatus('Cần nhập đủ tên 2 điểm.', 'err'); return; }
+  manualDashedEdges.add([p1, p2].sort().join('|'));
+  setStatus(`Đã đánh dấu cạnh ${p1}${p2} là nét khuất. Bấm "Sinh code" để xuất với nét đứt.`, 'ok');
+});
+document.getElementById('unmarkHiddenEdgeBtn').addEventListener('click', () => {
+  const p1 = document.getElementById('hiddenEdgeP1').value.trim();
+  const p2 = document.getElementById('hiddenEdgeP2').value.trim();
+  if (!p1 || !p2) { setStatus('Cần nhập đủ tên 2 điểm.', 'err'); return; }
+  const key = [p1, p2].sort().join('|');
+  if (manualDashedEdges.delete(key)) setStatus(`Đã bỏ đánh dấu cạnh ${p1}${p2}.`, 'ok');
+  else setStatus(`Cạnh ${p1}${p2} chưa được đánh dấu.`, 'err');
+});
+document.getElementById('clearHiddenEdgesBtn').addEventListener('click', () => {
+  manualDashedEdges.clear();
+  setStatus('Đã xoá tất cả đánh dấu nét khuất.', '');
+});
+
+document.getElementById('applyProjectionBtn').addEventListener('click', () => {
+  const angle = parseFloat(document.getElementById('projAngle').value);
+  const scale = parseFloat(document.getElementById('projScale').value);
+  if (!isFinite(angle) || !isFinite(scale) || scale <= 0) { setStatus('Góc/tỉ lệ chiếu không hợp lệ.', 'err'); return; }
+  PROJ_THETA = (angle * Math.PI) / 180;
+  PROJ_K = scale;
+  setStatus(`Đã áp dụng phép chiếu: góc ${angle}°, tỉ lệ ${scale}. Bấm "Sinh code" lại để thấy thay đổi.`, 'ok');
+});
+
 document.getElementById('typstLoader').addEventListener('load', () => {
 
 
@@ -1502,7 +1926,7 @@ async function renderCetzPreview(cetzBody) {
 }
 const ggbContainerEl = document.getElementById('ggb-container');
 const ggb = new GGBApplet({
-  appName: 'geometry',
+  appName: 'suite',
   width: ggbContainerEl.clientWidth || 1200,
   height: 680,
   showToolBar: true,
@@ -1514,7 +1938,7 @@ const ggb = new GGBApplet({
   fontSize: 22,
   appletOnLoad: (api) => {
     ggbApi = api;
-    setStatus('GeoGebra đã sẵn sàng. Vẽ hình rồi bấm "Sinh code".', 'ok');
+    setStatus('GeoGebra đã sẵn sàng — dùng nút chuyển đổi 2D/3D ngay trong GeoGebra (góc trên bên trái) để chuyển view khi cần. Vẽ hình rồi bấm "Sinh code".', 'ok');
 
     // Áp mặc định cho đối tượng MỚI vẽ: đường/đoạn/tia/vector màu đen, chấm điểm nhỏ lại còn ~1/2 mặc định.
     // (GeoGebra không có API đổi cỡ chữ nhãn từng đối tượng lúc chạy — cỡ chữ nhãn to hơn đã áp dụng
